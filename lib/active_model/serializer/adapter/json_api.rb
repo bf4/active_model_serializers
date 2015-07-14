@@ -9,6 +9,7 @@ module ActiveModel
         autoload :Meta
         autoload :Deserialization
         require 'active_model/serializer/adapter/json_api/api_objects'
+        require 'active_model/serializer/adapter/json_api/error'
 
         # TODO: if we like this abstraction and other API objects to it,
         # then extract to its own file and require it.
