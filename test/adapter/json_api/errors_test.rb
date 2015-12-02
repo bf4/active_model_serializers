@@ -24,7 +24,7 @@ module ActiveModel
             assert_equal serializable_resource.serializer_instance.object, @resource
 
             expected_errors_object =
-              { 'errors'.freeze =>
+              { :errors =>
                 [
                   {
                     source: { pointer: '/data/attributes/name' },
@@ -50,7 +50,7 @@ module ActiveModel
             assert_equal serializable_resource.serializer_instance.object, @resource
 
             expected_errors_object =
-              { 'errors'.freeze =>
+              { :errors =>
                 [
                   { :source => { :pointer => '/data/attributes/name' }, :detail => 'cannot be nil' },
                   { :source => { :pointer => '/data/attributes/name' }, :detail => 'must be longer' },
@@ -58,6 +58,20 @@ module ActiveModel
                 ]
             }
             assert_equal serializable_resource.as_json, expected_errors_object
+          end
+
+          # see http://jsonapi.org/examples/
+          def test_parameter_source_type_error
+            parameter = 'auther'
+            error_source = ActiveModel::Serializer::Adapter::JsonApi::Error.error_source(:parameter, parameter)
+            assert_equal({ parameter: parameter }, error_source)
+          end
+
+          def test_unknown_source_type_error
+            value = 'auther'
+            assert_raises(ActiveModel::Serializer::Adapter::JsonApi::Error::UnknownSourceTypeError) do
+              ActiveModel::Serializer::Adapter::JsonApi::Error.error_source(:hyper, value)
+            end
           end
         end
       end
