@@ -25,8 +25,7 @@ module ActiveModelSerializers
       end
     end
 
-    initializer 'active_model_serializers.generators' do |app|
-      app.load_generators
+    generators do
       require 'generators/serializer/resource_override'
     end
   end
