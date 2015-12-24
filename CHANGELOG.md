@@ -47,6 +47,7 @@ Features:
   when disabled, requires serializers to explicitly specified. (@trek)
 
 Fixes:
+- [#1352](https://github.com/rails-api/active_model_serializers/pull/1352) Fix generators; Isolate Rails-specifc code in Railties (@dgynn, @bf4)
 - [#1239](https://github.com/rails-api/active_model_serializers/pull/1239) Fix duplicates in JSON API compound documents (@beauby)
 - [#1214](https://github.com/rails-api/active_model_serializers/pull/1214) retrieve the key from the reflection options when building associations (@NullVoxPopuli, @hut8)
 - [#1358](https://github.com/rails-api/active_model_serializers/pull/1358) Handle serializer file paths with spaces (@rwstauner, @bf4)
