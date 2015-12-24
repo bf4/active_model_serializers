@@ -1,7 +1,6 @@
 require 'active_model'
 require 'active_support'
-require 'action_controller'
-require 'action_controller/railtie'
+require 'active_support/core_ext/object/with_options'
 module ActiveModelSerializers
   extend ActiveSupport::Autoload
   autoload :Model
@@ -9,7 +8,8 @@ module ActiveModelSerializers
   autoload :Deserialization
   autoload :Logging
 
-  mattr_accessor(:logger) { ActiveSupport::TaggedLogging.new(ActiveSupport::Logger.new(STDOUT)) }
+  class << self; attr_accessor :logger; end
+  self.logger = ActiveSupport::TaggedLogging.new(ActiveSupport::Logger.new(STDOUT))
 
   def self.config
     ActiveModel::Serializer.config
@@ -17,7 +17,6 @@ module ActiveModelSerializers
 
   require 'active_model/serializer/version'
   require 'active_model/serializer'
-  require 'active_model_serializers/railtie'
   require 'active_model/serializable_resource'
-  require 'action_controller/serialization'
+  require 'active_model_serializers/railtie' if defined?(::Rails)
 end
