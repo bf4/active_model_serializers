@@ -14,7 +14,7 @@ module ActiveModel
           def test_active_model_with_error
             options = {
                 serializer: ActiveModel::Serializer::ErrorSerializer,
-                adapter: :'json_api/error'
+                adapter: :json_api
             }
 
             @resource.errors.add(:name, 'cannot be nil')
@@ -38,7 +38,7 @@ module ActiveModel
           def test_active_model_with_multiple_errors
             options = {
                 serializer: ActiveModel::Serializer::ErrorSerializer,
-                adapter: :'json_api/error'
+                adapter: :json_api
             }
 
             @resource.errors.add(:name, 'cannot be nil')

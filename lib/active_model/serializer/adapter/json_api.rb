@@ -1,4 +1,4 @@
-require_relative 'json_api/error'
+require 'active_model_serializers/json_pointer'
 module ActiveModel
   class Serializer
     module Adapter
@@ -8,6 +8,7 @@ module ActiveModel
         autoload :FragmentCache
         autoload :Link
         autoload :Meta
+        autoload :Error
         autoload :Deserialization
         require 'active_model/serializer/adapter/json_api/api_objects'
         require 'active_model/serializer/adapter/json_api/error'
@@ -55,7 +56,14 @@ module ActiveModel
 
         def serializable_hash(options = nil)
           options ||= {}
+          if serializer.success?
+            success_document(options)
+          else
+            failure_document
+          end
+        end
 
+        def success_document(options)
           is_collection = serializer.respond_to?(:each)
           serializers = is_collection ? serializer : [serializer]
           primary_data, included = resource_objects_for(serializers)
@@ -76,6 +84,28 @@ module ActiveModel
             hash[:links].update(pagination_links_for(serializer, options))
           end
 
+          hash
+        end
+
+        # TODO: look into caching
+        # rubocop:disable Style/AsciiComments
+        # definition:
+        #   ☑ toplevel_errors array (required)
+        #   ☐ toplevel_meta
+        #   ☐ toplevel_jsonapi
+        # rubocop:enable Style/AsciiComments
+        def failure_document
+          hash = {}
+          # PR Please :)
+          # ApiObjects::Jsonapi.add!(hash)
+
+          if serializer.respond_to?(:each)
+            hash[:errors] = serializer.flat_map do |error_serializer|
+              Error.resource_errors(error_serializer)
+            end
+          else
+            hash[:errors] = Error.resource_errors(serializer)
+          end
           hash
         end
 
