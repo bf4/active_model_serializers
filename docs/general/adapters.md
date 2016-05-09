@@ -194,6 +194,43 @@ The user could pass in `include=**`.
 
 We recommend filtering any user-supplied includes appropriately.
 
+#### Include Parameters
+
+You may wish to include related resources based on the `include` request
+parameter (See [fetching_includes](http://jsonapi.org/format/#fetching-includes). You can opt-in to this pattern:
+
+```ruby
+class PostSerializer < ActiveModel::Serializer
+  associations_via_include_param(true)
+end
+```
+
+The serializer will now behave as follows:
+
+* If the relationship is in the `include` parameter, both
+  `relationships` and `included` will be populated.
+* If the relationship is not in the `include` parameter, but a `link`
+  has been specified, `relationships` will contain the link but not
+`id/type`s. This avoids an unnecessary database hit.
+* If the relationship is not in the `include` parameter, and there is no
+  `link`, the relationship is rendered without `data`. This specifies
+that the relationship exists, but we aren't saying anything about the
+contents of that relationship (nil, empty, or otherwise).
+
+To sync your URL `include` parameter with the `include` option passed to
+`render`, you'll probably also want to add something like this:
+
+```ruby
+class PeopleController < ApplicationController
+  def index
+    render json: Person.all, include: params[:include]
+  end
+end
+```
+
+Remember, you probably want to [whitelist your includes for security
+purposes](https://github.com/rails-api/active_model_serializers/blob/master/docs/general/adapters.md#security-considerations).
+
 ## Advanced adapter configuration
 
 ### Registering an adapter

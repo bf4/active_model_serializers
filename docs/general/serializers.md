@@ -112,7 +112,7 @@ has_many :comments, key: :reviews
 has_many :comments, serializer: CommentPreviewSerializer
 has_many :reviews, virtual_value: [{ id: 1 }, { id: 2 }]
 has_many :comments, key: :last_comments do
-  last(1)
+  load_data { last(1) }
 end
 ```
 
@@ -252,7 +252,7 @@ class PostSerializer < ActiveModel::Serializer
 
   # scope comments to those created_by the current user
   has_many :comments do
-    object.comments.where(created_by: current_user)
+    load_data { object.comments.where(created_by: current_user) }
   end
 end
 ```
@@ -365,7 +365,7 @@ To override an association, call `has_many`, `has_one` or `belongs_to` with a bl
 ```ruby
 class PostSerializer < ActiveModel::Serializer
   has_many :comments do
-    object.comments.active
+    load_data { object.comments.active }
   end
 end
 ```

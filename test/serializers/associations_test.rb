@@ -129,7 +129,7 @@ module ActiveModel
       class InlineAssociationTestPostSerializer < ActiveModel::Serializer
         has_many :comments
         has_many :comments, key: :last_comments do
-          object.comments.last(1)
+          load_data { object.comments.last(1) }
         end
       end
 
