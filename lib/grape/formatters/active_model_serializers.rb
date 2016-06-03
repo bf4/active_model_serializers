@@ -13,8 +13,6 @@ module Grape
         ::ActiveModelSerializers::SerializableResource.new(resource, serializer_options).to_json
       end
 
-      protected
-
       def self.build_serializer_options(env)
         ams_options = env[:active_model_serializer_options] || {}
 
@@ -22,8 +20,8 @@ module Grape
         ams_options.fetch(:serialization_context) do
           request = env['grape.request']
           ams_options[:serialization_context] = ::ActiveModelSerializers::SerializationContext.new(
-              request_url: request.url[/\A[^?]+/],
-              query_parameters: request.params
+            request_url: request.url[/\A[^?]+/],
+            query_parameters: request.params
           )
         end
 

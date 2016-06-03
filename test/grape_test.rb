@@ -26,7 +26,7 @@ class ActiveModelSerializers::GrapeTest < ActiveSupport::TestCase
     end
 
     def self.reset_all
-      ARModels::Post. delete_all
+      ARModels::Post.delete_all
       @all = nil
     end
 
@@ -36,19 +36,18 @@ class ActiveModelSerializers::GrapeTest < ActiveSupport::TestCase
 
     def self.collection
       @collection ||=
-          begin
-            Kaminari.paginate_array(
-                [
-                    Profile.new({id: 1, name: 'Name 1', description: 'Description 1', comments: 'Comments 1'}),
-                    Profile.new({id: 2, name: 'Name 2', description: 'Description 2', comments: 'Comments 2'}),
-                    Profile.new({id: 3, name: 'Name 3', description: 'Description 3', comments: 'Comments 3'}),
-                    Profile.new({id: 4, name: 'Name 4', description: 'Description 4', comments: 'Comments 4'}),
-                    Profile.new({id: 5, name: 'Name 5', description: 'Description 5', comments: 'Comments 5'})
-                ]
-            ).page(1).per(collection_per)
-          end
+        begin
+          Kaminari.paginate_array(
+            [
+                  Profile.new(id: 1, name: 'Name 1', description: 'Description 1', comments: 'Comments 1'),
+                  Profile.new(id: 2, name: 'Name 2', description: 'Description 2', comments: 'Comments 2'),
+                  Profile.new(id: 3, name: 'Name 3', description: 'Description 3', comments: 'Comments 3'),
+                  Profile.new(id: 4, name: 'Name 4', description: 'Description 4', comments: 'Comments 4'),
+                  Profile.new(id: 5, name: 'Name 5', description: 'Description 5', comments: 'Comments 5')
+              ]
+          ).page(1).per(collection_per)
+        end
     end
-
   end
 
   class GrapeTest < Grape::API
