@@ -2,6 +2,9 @@
 #
 # Serializer options can be passed as a hash from your Grape endpoint using env[:active_model_serializer_options],
 # or better yet user the render helper in Grape::Helpers::ActiveModelSerializers
+
+require 'active_model_serializers/serialization_context'
+
 module Grape
   module Formatters
     module ActiveModelSerializers

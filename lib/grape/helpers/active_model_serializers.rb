@@ -1,7 +1,5 @@
 # Helpers can be included in your Grape endpoint as: helpers Grape::Helpers::ActiveModelSerializers
 
-require 'active_model_serializers/serialization_context'
-
 module Grape
   module Helpers
     module ActiveModelSerializers
