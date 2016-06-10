@@ -41,7 +41,7 @@ module ActiveModel
 
             has_many :roles do |serializer|
               meta count: object.posts.count
-              load_data { serializer.cached_roles }
+              serializer.cached_roles
             end
 
             has_one :blog do

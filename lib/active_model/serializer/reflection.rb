@@ -38,7 +38,6 @@ module ActiveModel
         super
         @_links = {}
         @_include_data = true
-        @_load_data = false
         @_meta = nil
       end
 
@@ -57,11 +56,6 @@ module ActiveModel
         :nil
       end
 
-      def load_data(&blk)
-        @_load_data = blk
-        :nil
-      end
-
       # @param serializer [ActiveModel::Serializer]
       # @yield [ActiveModel::Serializer]
       # @return [:nil, associated resource or resource collection]
@@ -75,23 +69,19 @@ module ActiveModel
       #       Blog.find(object.blog_id)
       #     end
       #   end
-      def value(serializer, current_include_directive)
+      def value(serializer)
         @object = serializer.object
         @scope = serializer.scope
 
         if block
           block_value = instance_exec(serializer, &block)
-          load_data { block_value } if block_value != :nil
-
-          if include_data?(serializer, current_include_directive)
-            if @_load_data
-              @_load_data.call(current_include_directive)
-            else
-              include_data_for(serializer, current_include_directive)
-            end
+          if block_value != :nil
+            block_value
+          elsif @_include_data
+            serializer.read_attribute_for_serialization(name)
           end
         else
-          include_data_for(serializer, current_include_directive)
+          serializer.read_attribute_for_serialization(name)
         end
       end
 
@@ -116,11 +106,11 @@ module ActiveModel
       #
       # @api private
       #
-      def build_association(subject, parent_serializer_options, current_include_directive = {})
-        association_value = value(subject, current_include_directive)
+      def build_association(subject, parent_serializer_options)
+        association_value = value(subject)
         reflection_options = options.dup
         serializer_class = subject.class.serializer_for(association_value, reflection_options)
-        reflection_options[:include_data] = include_data?(subject, current_include_directive)
+        reflection_options[:include_data] = @_include_data
 
         if serializer_class
           begin
@@ -143,26 +133,6 @@ module ActiveModel
       attr_accessor :object, :scope
 
       private
-
-      def include_data_for(serializer, current_include_directive)
-        return unless include_data?(serializer, current_include_directive)
-
-        if serializer.class._associations_via_include_param
-          if current_include_directive.key?(name)
-            serializer.read_attribute_for_serialization(name)
-          end
-        else
-          serializer.read_attribute_for_serialization(name)
-        end
-      end
-
-      def include_data?(serializer, current_include_directive)
-        if serializer.class._associations_via_include_param
-          current_include_directive.key?(name)
-        else
-          @_include_data
-        end
-      end
 
       def serializer_options(subject, parent_serializer_options, reflection_options)
         serializer = reflection_options.fetch(:serializer, nil)

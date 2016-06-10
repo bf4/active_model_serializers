@@ -20,8 +20,6 @@ module ActiveModel
           class IncludeParamAuthorSerializer < ActiveModel::Serializer
             class_attribute :comment_loader
 
-            associations_via_include_param(true)
-
             has_many :tags, serializer: TagSerializer do
               link :self, '//example.com/link_author/relationships/tags'
             end
@@ -31,7 +29,7 @@ module ActiveModel
             has_many :posts, serializer: PostWithTagsSerializer
             has_many :locations
             has_many :comments do
-              load_data { IncludeParamAuthorSerializer.comment_loader.all }
+              IncludeParamAuthorSerializer.comment_loader.all
             end
 
             has_many :inline_comments do

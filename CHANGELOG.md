@@ -32,7 +32,6 @@ Features:
 - [#1687](https://github.com/rails-api/active_model_serializers/pull/1687) Only calculate `_cache_digest` (in `cache_key`) when `skip_digest` is false. (@bf4)
 - [#1647](https://github.com/rails-api/active_model_serializers/pull/1647) Restrict usage of `serializable_hash` options
   to the ActiveModel::Serialization and ActiveModel::Serializers::JSON interface. (@bf4)
-- [#1720](https://github.com/rails-api/active_model_serializers/pull/1720) Support JSONAPI 'include` parameter with links/loading.
 
 Fixes:
 - [#1700](https://github.com/rails-api/active_model_serializers/pull/1700) Support pagination link for Kaminari when no data is returned. (@iamnader)

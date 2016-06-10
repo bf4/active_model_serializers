@@ -13,7 +13,6 @@ module ActiveModel
       included do
         with_options instance_writer: false, instance_reader: true do |serializer|
           serializer.class_attribute :_reflections
-          serializer.class_attribute :_associations_via_include_param
           self._reflections ||= []
         end
 
@@ -66,10 +65,6 @@ module ActiveModel
           associate(HasOneReflection.new(name, options, block))
         end
 
-        def associations_via_include_param(val)
-          self._associations_via_include_param = val
-        end
-
         private
 
         # Add reflection and define {name} accessor.
@@ -87,8 +82,7 @@ module ActiveModel
       #   +default_include_directive+ config value when not provided)
       # @return [Enumerator<Association>]
       #
-      def associations(include_directive = ActiveModelSerializers.default_include_directive, current_include_directive = nil)
-        current_include_directive ||= include_directive
+      def associations(include_directive = ActiveModelSerializers.default_include_directive)
         return unless object
 
         Enumerator.new do |y|
@@ -96,8 +90,7 @@ module ActiveModel
             next if reflection.excluded?(self)
             key = reflection.options.fetch(:key, reflection.name)
             next unless include_directive.key?(key)
-
-            y.yield reflection.build_association(self, instance_options, current_include_directive)
+            y.yield reflection.build_association(self, instance_options)
           end
         end
       end
