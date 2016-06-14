@@ -1,7 +1,7 @@
 require 'test_helper'
 
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
     class MetaTest < ActiveSupport::TestCase
       def setup
         @blog = Blog.new(id: 1,

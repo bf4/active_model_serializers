@@ -1,7 +1,7 @@
 require 'test_helper'
 
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
     class FieldsetTest < ActiveSupport::TestCase
       def test_fieldset_with_hash
         fieldset = ActiveModel::Serializer::Fieldset.new('post' => %w(id title), 'comment' => ['body'])

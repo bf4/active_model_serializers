@@ -1,7 +1,7 @@
 require 'test_helper'
 
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
     class LoggingTest < ActiveSupport::TestCase
       class TestLogger < ActiveSupport::Logger
         def initialize

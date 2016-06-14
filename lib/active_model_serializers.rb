@@ -3,6 +3,8 @@ require 'active_support'
 require 'active_support/core_ext/object/with_options'
 require 'active_support/core_ext/string/inflections'
 require 'active_support/json'
+require 'railsapi-resources'
+require 'active_model_serializers/version'
 module ActiveModelSerializers
   extend ActiveSupport::Autoload
   autoload :Model
@@ -37,7 +39,6 @@ module ActiveModelSerializers
     @default_include_directive ||= JSONAPI::IncludeDirective.new(config.default_includes, allow_wildcard: true)
   end
 
-  require 'active_model/serializer/version'
   require 'active_model/serializer'
   require 'active_model/serializable_resource'
   require 'active_model_serializers/railtie' if defined?(::Rails)

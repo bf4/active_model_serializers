@@ -1,5 +1,5 @@
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
     module Adapter
       class Base < DelegateClass(ActiveModelSerializers::Adapter::Base)
         class << self

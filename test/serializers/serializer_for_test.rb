@@ -1,8 +1,8 @@
 require 'test_helper'
 
 module ActiveModel
-  class Serializer
-    class SerializerForTest < ActiveSupport::TestCase
+  class Serializer < ::RailsAPI::Resource
+    class SerializerTest < ActiveSupport::TestCase
       class CollectionSerializerTest < ActiveSupport::TestCase
         def setup
           @array = [1, 2, 3]

@@ -1,5 +1,5 @@
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
     class Fieldset
       def initialize(fields)
         @raw_fields = fields || {}

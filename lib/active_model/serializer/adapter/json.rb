@@ -1,5 +1,5 @@
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
     module Adapter
       class Json < DelegateClass(ActiveModelSerializers::Adapter::Json)
         def initialize(serializer, options = {})

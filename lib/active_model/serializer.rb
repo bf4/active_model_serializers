@@ -17,10 +17,23 @@ require 'active_model/serializer/type'
 # ActiveModel::Serializer is an abstract class that is
 # reified when subclassed to decorate a resource.
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
+    def self._model_name
+      return '' if _abstract
+      @_model_name ||=
+        if name
+          name.demodulize.sub(/(?:Serializer|Resource)$/, '')
+        else
+          p caller
+          # require 'pry'
+          # binding.pry
+          self.inspect
+        end
+    end
     # @see #serializable_hash for more details on these valid keys.
     SERIALIZABLE_HASH_VALID_KEYS = [:only, :except, :methods, :include, :root].freeze
     extend ActiveSupport::Autoload
+    autoload :VERSION
     autoload :Adapter
     autoload :Null
     include Configuration

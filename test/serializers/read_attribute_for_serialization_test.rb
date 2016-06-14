@@ -1,7 +1,7 @@
 require 'test_helper'
 
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
     class ReadAttributeForSerializationTest < ActiveSupport::TestCase
       # https://github.com/rails-api/active_model_serializers/issues/1653
       class Parent < ActiveModelSerializers::Model

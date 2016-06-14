@@ -30,6 +30,8 @@ else
   gem 'activerecord', gem_version, group: :test
 end
 
+gem 'railsapi-resources', github: 'rails-api/railsapi-resources', branch: 'ams'
+
 # https://github.com/bundler/bundler/blob/89a8778c19269561926cea172acdcda241d26d23/lib/bundler/dependency.rb#L30-L54
 @windows_platforms = [:mswin, :mingw, :x64_mingw]
 

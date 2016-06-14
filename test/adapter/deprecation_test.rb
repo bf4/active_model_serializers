@@ -1,6 +1,6 @@
 require 'test_helper'
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
     module Adapter
       class DeprecationTest < ActiveSupport::TestCase
         class PostSerializer < ActiveModel::Serializer

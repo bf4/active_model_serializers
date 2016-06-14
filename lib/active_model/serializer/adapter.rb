@@ -2,7 +2,7 @@ require 'active_model_serializers/adapter'
 require 'active_model_serializers/deprecate'
 
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
     # @deprecated Use ActiveModelSerializers::Adapter instead
     module Adapter
       class << self

@@ -1,7 +1,7 @@
 require 'test_helper'
 
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
     class LintTest < ActiveSupport::TestCase
       include ActiveModel::Serializer::Lint::Tests
 

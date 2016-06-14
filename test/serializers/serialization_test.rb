@@ -1,5 +1,5 @@
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
     class SerializationTest < ActiveSupport::TestCase
       class Blog < ActiveModelSerializers::Model
         attr_accessor :id, :name, :authors

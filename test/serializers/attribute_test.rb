@@ -1,7 +1,7 @@
 require 'test_helper'
 
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
     class AttributeTest < ActiveSupport::TestCase
       def setup
         @blog = Blog.new(id: 1, name: 'AMS Hints', type: 'stuff')

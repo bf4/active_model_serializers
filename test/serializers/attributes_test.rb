@@ -1,7 +1,7 @@
 require 'test_helper'
 
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
     class AttributesTest < ActiveSupport::TestCase
       def setup
         @profile = Profile.new(name: 'Name 1', description: 'Description 1', comments: 'Comments 1')

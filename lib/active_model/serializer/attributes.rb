@@ -1,5 +1,5 @@
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
     module Attributes
       extend ActiveSupport::Concern
 
@@ -25,11 +25,6 @@ module ActiveModel
       end
 
       module ClassMethods
-        def inherited(base)
-          super
-          base._attributes_data = _attributes_data.dup
-        end
-
         # @example
         #   class AdminAuthorSerializer < ActiveModel::Serializer
         #     attributes :id, :name, :recent_edits

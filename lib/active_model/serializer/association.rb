@@ -1,5 +1,5 @@
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
     # This class hold all information about serializer's association.
     #
     # @attr [Symbol] name

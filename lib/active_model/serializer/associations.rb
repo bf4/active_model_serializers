@@ -1,5 +1,5 @@
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
     # Defines an association in the object should be rendered.
     #
     # The serializer object should implement the association name
@@ -27,11 +27,6 @@ module ActiveModel
       end
 
       module ClassMethods
-        def inherited(base)
-          super
-          base._reflections = _reflections.dup
-        end
-
         # @param [Symbol] name of the association
         # @param [Hash<Symbol => any>] options for the reflection
         # @return [void]

@@ -2,7 +2,7 @@ require 'test_helper'
 require_relative 'collection_serializer_test'
 
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
     class ArraySerializerTest < CollectionSerializerTest
       extend Minitest::Assertions
       def self.run_one_method(*)

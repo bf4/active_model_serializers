@@ -1,5 +1,5 @@
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
     class CollectionSerializer
       NoSerializerError = Class.new(StandardError)
       include Enumerable

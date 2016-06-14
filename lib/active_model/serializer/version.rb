@@ -1,5 +1,1 @@
-module ActiveModel
-  class Serializer
-    VERSION = '0.10.2'.freeze
-  end
-end
+ActiveModel::Serializer::VERSION = ActiveModelSerializers::VERSION

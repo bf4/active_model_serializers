@@ -1,7 +1,7 @@
 require 'test_helper'
 
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
     class CollectionSerializerTest < ActiveSupport::TestCase
       class MessagesSerializer < ActiveModel::Serializer
         type 'messages'

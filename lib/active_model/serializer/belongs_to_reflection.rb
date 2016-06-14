@@ -1,5 +1,5 @@
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
     # @api private
     class BelongsToReflection < SingularReflection
     end

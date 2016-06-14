@@ -1,7 +1,7 @@
 require 'active_model/serializer/field'
 
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
     # Holds all the meta-data about an association as it was specified in the
     # ActiveModel::Serializer class.
     #

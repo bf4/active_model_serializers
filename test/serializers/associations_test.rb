@@ -1,6 +1,6 @@
 require 'test_helper'
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
     class AssociationsTest < ActiveSupport::TestCase
       def setup
         @author = Author.new(name: 'Steve K.')

@@ -1,5 +1,5 @@
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
     module Configuration
       include ActiveSupport::Configurable
       extend ActiveSupport::Concern

@@ -1,5 +1,5 @@
 module ActiveModel
-  class Serializer
+  class Serializer < ::RailsAPI::Resource
     module Links
       extend ActiveSupport::Concern
 
@@ -13,11 +13,6 @@ module ActiveModel
       end
 
       module ClassMethods
-        def inherited(base)
-          super
-          base._links = _links.dup
-        end
-
         # Define a link on a serializer.
         # @example
         #   link(:self) { resource_url(object) }
