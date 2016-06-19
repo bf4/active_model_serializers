@@ -1,25 +1,30 @@
+ActionController::Base.cache_store.clear
+ActiveSupport::Cache::Store.logger = Logger.new(STDOUT)# seems to be the best way
 class PrimaryResourceController < ActionController::Base
   PRIMARY_RESOURCE =
     begin
       if ENV['BENCH_STRESS']
         has_many_relationships = (0..50).map do |i|
-          HasManyRelationship.new(id: i, body: 'ZOMG A HAS MANY RELATIONSHIP')
+          HasManyRelationship.create(id: i, body: 'ZOMG A HAS MANY RELATIONSHIP')
         end
       else
-        has_many_relationships = [HasManyRelationship.new(id: 1, body: 'ZOMG A HAS MANY RELATIONSHIP')]
+        has_many_relationships = [HasManyRelationship.create(id: 1, body: 'ZOMG A HAS MANY RELATIONSHIP')]
       end
-      has_one_relationship = HasOneRelationship.new(id: 42, first_name: 'Joao', last_name: 'Moura')
-      PrimaryResource.new(id: 1337, title: 'New PrimaryResource', virtual_attribute: nil, body: 'Body', has_many_relationships: has_many_relationships, has_one_relationship: has_one_relationship)
+      has_one_relationship = HasOneRelationship.create(id: 42, first_name: 'Joao', last_name: 'Moura')
+      PrimaryResource.create(id: 1337, title: 'New PrimaryResource', virtual_attribute: nil, body: 'Body', has_many_relationships: has_many_relationships, has_one_relationship: has_one_relationship)
     end
 
   def render_with_caching_serializer
     toggle_cache_status
-    render json: PRIMARY_RESOURCE, serializer: CachingPrimaryResourceSerializer, adapter: :json, meta: { caching: perform_caching }
-  end
 
-  def render_with_fragment_caching_serializer
-    toggle_cache_status
-    render json: PRIMARY_RESOURCE, serializer: FragmentCachingPrimaryResourceSerializer, adapter: :json, meta: { caching: perform_caching }
+    ams_options = { serializer: CachingPrimaryResourceSerializer, adapter: :json }
+    render_options = { status: :ok, meta: {caching: perform_caching } }
+    pipeline_options = ams_options.merge(view: ActiveModelSerializers::SerializableResource)
+    pipeline = Knuckles::Pipeline.new
+    render_options[:json] = pipeline.call([PRIMARY_RESOURCE], view: ActiveModelSerializers::SerializableResource)
+    render render_options
+
+    # render json: PRIMARY_RESOURCE, serializer: CachingPrimaryResourceSerializer, adapter: :json, meta: { caching: perform_caching }
   end
 
   def render_with_non_caching_serializer
@@ -78,6 +83,5 @@ Rails.application.routes.draw do
   get '/status(/:on)' => 'primary_resource#render_cache_status'
   get '/clear' => 'primary_resource#clear'
   get '/caching(/:on)' => 'primary_resource#render_with_caching_serializer'
-  get '/fragment_caching(/:on)' => 'primary_resource#render_with_fragment_caching_serializer'
   get '/non_caching(/:on)' => 'primary_resource#render_with_non_caching_serializer'
 end

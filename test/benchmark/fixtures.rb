@@ -149,8 +149,8 @@ if ENV['ENABLE_ACTIVE_RECORD'] == 'true'
   end
 
   class HasOneRelationship < ActiveRecord::Base
-    has_many :primary_resources
-    has_many :has_many_relationships
+    # has_many :primary_resources
+    # has_many :has_many_relationships
   end
 
   class PrimaryResource < ActiveRecord::Base
@@ -169,6 +169,10 @@ else
   class BenchmarkModel
     include ActiveModel::Model
     include ActiveModel::Serializers::JSON
+
+    def self.create(options={})
+      new(options)
+    end
 
     attr_reader :attributes
 

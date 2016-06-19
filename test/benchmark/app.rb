@@ -36,8 +36,7 @@ class BenchmarkApp < Rails::Application
   config.cache_classes = true
   # CONFIG: CACHE_ON={on,off}
   config.action_controller.perform_caching = ENV['CACHE_ON'] != 'off'
-  config.action_controller.cache_store = ActiveSupport::Cache.lookup_store(:memory_store)
-
+ config.action_controller.cache_store = ActiveSupport::Cache.lookup_store(:memory_store)
   config.active_support.test_order = :random
   config.secret_token = 'S' * 30
   config.secret_key_base = 'abc123'
@@ -47,10 +46,37 @@ class BenchmarkApp < Rails::Application
   config.middleware.delete 'Rack::Lock'
 
   # to disable log files
-  config.logger = NullLogger.new
+  config.logger = Logger.new(STDOUT)
   config.active_support.deprecation = :log
   config.log_level = :info
 end
+
+   require 'active_support'
+   require 'redis'
+   require 'oj'
+   require 'readthis'
+   require 'knuckles'
+   Readthis.serializers << ::Oj
+   cache_store = Readthis::Cache.new(
+     marshal: Oj,
+     compress: true,
+     driver: :hiredis
+   )
+   # config.action_controller.cache_store = cache_store
+   ENV['REDIS_URL'] = 'redis://localhost:6379/5'
+   ::Knuckles.configure do |config|
+     config.cache = cache_store
+     config.keygen = Readthis::Expanders
+     config.serializer = Oj
+   end
+
+   # config.action_controller.cache_store = :readthis_store, {
+   #   expires_in: 15.minutes.to_i,
+   #   marshal: ::Oj,
+   #   namespace: 'cache',
+   #   redis: { url: ENV.fetch('REDIS_URL'), driver: :hiredis, compress: true }
+   # }
+   #
 
 require 'active_model_serializers'
 

@@ -5,7 +5,7 @@ case "$1" in
 
   start)
   config="${CONFIG_RU:-test/benchmark/config.ru}"
-  bundle exec ruby -Ilib -S rackup "$config" --daemonize --pid tmp/benchmark_app.pid --warn --server webrick
+  bundle exec ruby -Ilib -S rackup "$config" --warn --server webrick #--daemonize --pid tmp/benchmark_app.pid 
   until [ -f 'tmp/benchmark_app.pid' ]; do
     sleep 0.1 # give it time to start.. I don't know a better way
   done

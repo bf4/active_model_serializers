@@ -104,12 +104,10 @@ assertion.debug { assertion.get_status }
 
 time = 10
 {
-  'caching on: caching serializers: gc off' => { disable_gc: true, send: [:get_caching, 'on'] },
-  'caching on: fragment caching serializers: gc off' => { disable_gc: true, send: [:get_fragment_caching, 'on'] },
-  'caching on: non-caching serializers: gc off' => { disable_gc: true, send: [:get_non_caching, 'on'] },
-  'caching off: caching serializers: gc off' => { disable_gc: true, send: [:get_caching, 'off'] },
-  'caching off: fragment caching serializers: gc off' => { disable_gc: true, send: [:get_fragment_caching, 'off'] },
-  'caching off: non-caching serializers: gc off' => { disable_gc: true, send: [:get_non_caching, 'off'] }
+  'caching on: caching: gc off' => { disable_gc: true, send: [:get_caching, 'on'] },
+  'caching on: non-caching: gc off' => { disable_gc: true, send: [:get_non_caching, 'on'] },
+  'caching off: caching: gc off' => { disable_gc: true, send: [:get_caching, 'off'] },
+  'caching off: non-caching: gc off' => { disable_gc: true, send: [:get_non_caching, 'off'] }
 }.each do |label, options|
   assertion.clear
   Benchmark.ams(label, time: time, disable_gc: options[:disable_gc]) do
