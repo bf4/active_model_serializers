@@ -154,14 +154,7 @@ LikeSerializer = Class.new(ActiveModel::Serializer) do
 end
 
 LocationSerializer = Class.new(ActiveModel::Serializer) do
-  cache only: [:address], skip_digest: true
   attributes :id, :lat, :lng
-
-  belongs_to :place, key: :address
-
-  def place
-    'Nowhere'
-  end
 end
 
 PlaceSerializer = Class.new(ActiveModel::Serializer) do
