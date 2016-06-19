@@ -31,6 +31,8 @@ module ActiveModel
     include Meta
     include Type
 
+    attr_accessor :adapter_instance
+
     # @param resource [ActiveRecord::Base, ActiveModelSerializers::Model]
     # @return [ActiveModel::Serializer]
     #   Preferentially returns

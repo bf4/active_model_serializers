@@ -1,7 +1,10 @@
+require 'active_model/serializer/collection_caching'
 module ActiveModel
   class Serializer
     class CollectionSerializer
       NoSerializerError = Class.new(StandardError)
+      include ActiveModel::Serializer::CollectionCaching
+
       include Enumerable
       delegate :each, to: :@serializers
 

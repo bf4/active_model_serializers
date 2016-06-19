@@ -1,3 +1,4 @@
+# rubocop:disable Metrics/ModuleLength
 module ActiveModel
   class Serializer
     UndefinedCacheKey = Class.new(StandardError)
@@ -202,6 +203,45 @@ module ActiveModel
       end
 
       ### INSTANCE METHODS
+
+      # begin https://github.com/rails-api/active_model_serializers/pull/352/files
+      def to_json(*args)
+        if caching_enabled?
+          # serializer_class.cache_store.fetch(key, serializer_class._cache_options) do
+          serializer_class.cache_store.fetch expanded_cache_key('to-json', adapter_instance) do
+            super
+          end
+        else
+          super
+        end
+      end
+
+      def serializable_hash(adapter_options = nil, options = {}, adapter_instance = self.class.serialization_adapter_instance)
+        @adapter_instance = adapter_instance
+        if caching_enabled?
+          cache_store.fetch expanded_cache_key('serialize', adapter_instance) do
+            super
+          end
+        else
+          super
+        end
+      end
+
+      def expanded_cache_key(suffix, adapter_instance)
+        expand_cache_key([self.class.to_s.underscore, cache_key(adapter_instance), suffix])
+      end
+
+      # private
+
+      def caching_enabled?
+        serializer_class.cache_enabled?
+      end
+
+      def expand_cache_key(*args)
+        ActiveSupport::Cache.expand_cache_key(args)
+      end
+      # end https://github.com/rails-api/active_model_serializers/pull/352/files
+
       def fetch_attributes(fields, cached_attributes, adapter_instance)
         if serializer_class.cache_enabled?
           key = cache_key(adapter_instance)
@@ -283,3 +323,4 @@ module ActiveModel
     end
   end
 end
+# rubocop:enable Metrics/ModuleLength
