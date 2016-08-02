@@ -1,0 +1,1 @@
+# UpdateUpdate the `.dot` file.With graphviz installed:```bashdot etc/erdnew.dot -Tpng -o etc/erdnew.png```

@@ -1,0 +1,100 @@
+digraph classes {
+	graph [
+    rotate=0
+  ]
+  fontname = "Bitstream Vera Sans"
+  fontsize = 8
+  node [
+    fontname = "Bitstream Vera Sans"
+    fontsize = 8
+    shape = "record"
+    style="filled"
+	  fillcolor="#c4ddec"
+  ]
+
+  // top level classes
+  // ##############################################################################
+  edge [
+    fontname = "Bitstream Vera Sans"
+    fontsize = 8
+	  color="#444444"
+  ]
+
+  // http://www.ffnn.nl/pages/articles/media/uml-diagrams-using-graphviz-dot.php
+  // The opening and closing curly braces "{" and "}"
+  //   indicate that we want to create a "record" shape with multiple dividers.
+  // The pipe characters "|" indicate the dividers,
+  //   we use one to separate the class name from the attributes and
+  //   another one to separate the methods from the attributes.
+  // Putting the "\l" characters after a line of text indicates
+  //   the line should be aligned to the left side of the shape and
+  //   that a new line of text should start.
+
+	ActiveModel__Serializer [
+     label="{ActiveModel::Serializer||+ attributes()\l+ associations()\l|+ serializable_hash \l}"
+  ]
+	ActiveModel__Serializer__Field [label="ActiveModel::Serializer::Field"]
+	ActiveModel__Serializer__Attribute [label="ActiveModel::Serializer::Attribute"]
+	ActiveModel__Serializer__Association [label="ActiveModel::Serializer::Association"]
+
+  // collection
+  // ##############################################################################
+  // The name of the subgraph is very important:
+  // only subgraphs having a name starting with "cluster" are drawn together inside a box.
+  subgraph clusterReflections {
+    label = "Reflections"
+    ActiveModel__Serializer__Reflection [label="ActiveModel::Serializer::Reflection"]
+    ActiveModel__Serializer__SingularReflection [label="ActiveModel::Serializer::SingularReflection"]
+    ActiveModel__Serializer__BelongsToReflection [label="ActiveModel::Serializer::BelongsToReflection"]
+    ActiveModel__Serializer__CollectionReflection [label="ActiveModel::Serializer::CollectionReflection"]
+    ActiveModel__Serializer__HasManyReflection [label="ActiveModel::Serializer::HasManyReflection"]
+    ActiveModel__Serializer__HasOneReflection [label="ActiveModel::Serializer::HasOneReflection"]
+  }
+
+  // subclass
+  // ##############################################################################
+  edge [
+    arrowhead = "empty"
+  ]
+
+
+	ActiveModel__Serializer__HasManyReflection -> ActiveModel__Serializer__CollectionReflection
+	ActiveModel__Serializer__CollectionReflection -> ActiveModel__Serializer__Reflection
+	ActiveModel__Serializer__HasOneReflection -> ActiveModel__Serializer__SingularReflection
+	ActiveModel__Serializer__BelongsToReflection -> ActiveModel__Serializer__SingularReflection
+	ActiveModel__Serializer__SingularReflection -> ActiveModel__Serializer__Reflection
+	ActiveModel__Serializer__Reflection -> ActiveModel__Serializer__Field
+	ActiveModel__Serializer__Attribute -> ActiveModel__Serializer__Field
+	ActiveModel__Serializer__Field -> Struct
+
+  // N:M association
+  // ##############################################################################
+  edge [
+    arrowhead = "none"
+
+    headlabel = "0..*"
+    taillabel = "0..*"
+  ]
+
+  // 1:M association
+  // ##############################################################################
+  edge [
+    arrowhead = "none"
+
+    headlabel = "1..*"
+    taillabel = "1..1"
+  ]
+	ActiveModel__Serializer -> ActiveModel__Serializer__Attribute
+	ActiveModel__Serializer -> ActiveModel__Serializer__Association
+
+  // 1:1 association
+  // ##############################################################################
+  edge [
+    arrowhead = "none"
+
+    headlabel = "1..1"
+    taillabel = "1..1"
+  ]
+	ActiveModel__Serializer__Association -> ActiveModel__Serializer__Reflection
+
+}
