@@ -33,6 +33,13 @@ class JsonSchemaTest < Minitest::Test
     end
   end
 
+  class JsonApiTest < JsonSchemaTest
+    def test_properties
+      data = { "link" => "http://www.example.com" }
+      assert_schema_definition('jsonapi', data)
+    end
+  end
+
   private
 
   attr_reader :schemas
@@ -43,7 +50,7 @@ class JsonSchemaTest < Minitest::Test
 
   def init_schemas
     @document_store = JsonSchema::DocumentStore.new
-    schema_directory = TEST_DIR.join('schema/schemata')
+    schema_directory = TEST_DIR.join('schema')
     @schemas = {}
     Dir.glob(schema_directory.join("**/*.json")).each do |path|
       schema_data = JSON.parse(File.read(path))
