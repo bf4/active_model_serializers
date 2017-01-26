@@ -20,13 +20,13 @@ class JsonSchemaTest < Minitest::Test
     end
 
     def test_meta_string_is_invalid
-      data = "string"
+      data = 'string'
       error_matcher = / \"string\" is not an object/
       refute_schema_definition('meta', data, error_matcher)
     end
 
     def test_meta_array_is_invalid
-      data = ["array"]
+      data = ['array']
       error_matcher = / \[\"array\"\] is not an object/
       refute_schema_definition('meta', data, error_matcher)
     end
@@ -50,7 +50,7 @@ class JsonSchemaTest < Minitest::Test
     end
 
     def test_link_object_with_meta_is_valid
-      data = { 'href' => 'http://www.example.com', 'meta' => { 'ohai' => 'orly'} }
+      data = { 'href' => 'http://www.example.com', 'meta' => { 'ohai' => 'orly' } }
       assert_schema_definition('link', data)
     end
 
@@ -68,7 +68,7 @@ class JsonSchemaTest < Minitest::Test
     end
 
     def test_link_object_with_additional_properties_meta_is_invalid
-      data = { 'href' => 'http://www.example.com', 'cat' => { 'ohai' => 'orly'} }
+      data = { 'href' => 'http://www.example.com', 'cat' => { 'ohai' => 'orly' } }
       error_matcher = / \"cat\" is not a permitted key/
       refute_schema_definition('link', data, error_matcher)
     end
@@ -133,12 +133,10 @@ class JsonSchemaTest < Minitest::Test
       errors.map { |error| schema_error_message(error) }.join("\n")
     elsif errors.nil?
       ''
+    elsif (sub_errors = errors.sub_errors).nil? || sub_errors.all?(&:empty?)
+      "ERROR: #{errors}"
     else
-      if (sub_errors = errors.sub_errors).nil? || sub_errors.all?(&:empty?)
-        "ERROR: #{errors.to_s}"
-      else
-        schema_error_message(sub_errors)
-      end
+      schema_error_message(sub_errors)
     end
   end
 end
