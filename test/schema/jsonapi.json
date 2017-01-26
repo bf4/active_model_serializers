@@ -1,0 +1,7 @@
+{
+  "properties": {
+    "link": {
+      "$ref": "file://schemata/link.json#"
+    }
+  }
+}
