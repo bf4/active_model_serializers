@@ -3,6 +3,7 @@
   "description": "JSON:API Schema",
   "type": "object",
   "properties": {
-    "link": { "$ref": "file://schemata/link.json#" }
+    "link": { "$ref": "file://schemata/link.json#" },
+    "meta": { "$ref": "file://schemata/meta.json#" }
   }
 }

@@ -75,8 +75,13 @@ class JsonSchemaTest < Minitest::Test
   end
 
   class JsonApiTest < JsonSchemaTest
-    def test_properties
+    def test_link_defined
       data = { 'link' => 'http://www.example.com' }
+      assert_schema_definition('jsonapi', data)
+    end
+
+    def test_meta_defined
+      data = { 'meta' => { 'json' => 'schema' } }
       assert_schema_definition('jsonapi', data)
     end
   end
