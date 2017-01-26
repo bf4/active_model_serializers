@@ -1,0 +1,8 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "meta",
+  "description": "Non-standard meta-information that can not be represented as an attribute or relationship.",
+  "id": "file://schemata/meta.json#",
+  "type": "object",
+  "additionalProperties": true
+}

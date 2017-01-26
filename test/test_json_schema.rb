@@ -8,6 +8,36 @@ class JsonSchemaTest < Minitest::Test
     init_schemas
   end
 
+  class JsonApiMetaTest < JsonSchemaTest
+    def test_meta_object_with_data_is_valid
+      data = { 'key' => 'value' }
+      assert_schema_definition('meta', data)
+    end
+
+    def test_meta_object_without_data_is_valid
+      data = {}
+      assert_schema_definition('meta', data)
+    end
+
+    def test_meta_string_is_invalid
+      data = "string"
+      error_matcher = / \"string\" is not an object/
+      refute_schema_definition('meta', data, error_matcher)
+    end
+
+    def test_meta_array_is_invalid
+      data = ["array"]
+      error_matcher = / \[\"array\"\] is not an object/
+      refute_schema_definition('meta', data, error_matcher)
+    end
+
+    def test_meta_null_is_invalid
+      data = nil
+      error_matcher = /nil is not an object/
+      refute_schema_definition('meta', data, error_matcher)
+    end
+  end
+
   class JsonApiLinkTest < JsonSchemaTest
     def test_link_string_is_valid
       data = 'http://www.example.com'
