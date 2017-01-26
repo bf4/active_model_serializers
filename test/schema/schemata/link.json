@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "link",
+  "description": "A link **MUST** be represented as either: a string containing the link's URL or a link object.",
+  "id": "file://schemata/link.json#",
+  "oneOf": [
+    {
+      "description": "A string containing the link's URL.",
+      "type": "string",
+      "format": "uri"
+    },
+    {
+      "type": "object",
+      "required": [
+        "href"
+          ],
+      "properties": {
+        "href": {
+          "description": "A string containing the link's URL.",
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    }
+  ]
+}
