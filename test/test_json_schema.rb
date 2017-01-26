@@ -49,6 +49,11 @@ class JsonSchemaTest < Minitest::Test
       assert_schema_definition('link', data)
     end
 
+    def test_link_object_with_meta_is_valid
+      data = { 'href' => 'http://www.example.com', 'meta' => { 'ohai' => 'orly'} }
+      assert_schema_definition('link', data)
+    end
+
     def test_link_object_without_href_is_invalid
       data = { 'not_a_href' => 'http://www.example.com' }
       error_matcher = /\"href\" wasn't supplied/
@@ -59,6 +64,12 @@ class JsonSchemaTest < Minitest::Test
       data = { 'href' => 'http://www.example.com[]' }
       assert_raises(URI::InvalidURIError) { URI.parse(data['href']) }
       error_matcher = /not a valid uri/
+      refute_schema_definition('link', data, error_matcher)
+    end
+
+    def test_link_object_with_additional_properties_meta_is_invalid
+      data = { 'href' => 'http://www.example.com', 'cat' => { 'ohai' => 'orly'} }
+      error_matcher = / \"cat\" is not a permitted key/
       refute_schema_definition('link', data, error_matcher)
     end
   end
@@ -123,8 +134,8 @@ class JsonSchemaTest < Minitest::Test
     elsif errors.nil?
       ''
     else
-      if (sub_errors = errors.sub_errors).nil?
-        errors.to_s
+      if (sub_errors = errors.sub_errors).nil? || sub_errors.all?(&:empty?)
+        "ERROR: #{errors.to_s}"
       else
         schema_error_message(sub_errors)
       end

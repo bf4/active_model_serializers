@@ -11,6 +11,7 @@
     },
     {
       "type": "object",
+      "description": "linkObject",
       "required": [
         "href"
           ],
@@ -19,8 +20,10 @@
           "description": "A string containing the link's URL.",
           "type": "string",
           "format": "uri"
-        }
-      }
+        },
+        "meta": { "$ref": "file://schemata/meta.json#" }
+      },
+      "additionalProperties": false
     }
   ]
 }
