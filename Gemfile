@@ -2,15 +2,17 @@ source 'https://rubygems.org'
 
 gemspec
 
-version = ENV["RAILS_VERSION"] || "4.2"
+version = ENV['RAILS_VERSION'] || '4.2'
 
 if version == 'master'
   gem 'rack', github: 'rack/rack'
+  gem 'arel', github: 'rails/arel'
   git 'https://github.com/rails/rails.git' do
     gem 'railties'
     gem 'activesupport'
     gem 'activemodel'
     gem 'actionpack'
+    gem 'activerecord', group: :test
     # Rails 5
     gem 'actionview'
   end
