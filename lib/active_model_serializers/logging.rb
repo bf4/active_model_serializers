@@ -5,6 +5,7 @@
 #
 module ActiveModelSerializers
   module Logging
+    RENDER_EVENT = 'render.active_model_serializers'.freeze
     extend ActiveSupport::Concern
 
     included do
@@ -73,14 +74,17 @@ module ActiveModelSerializers
     end
 
     def notify_render(*)
-      event_name = 'render.active_model_serializers'.freeze
+      event_name = RENDER_EVENT
       ActiveSupport::Notifications.instrument(event_name, notify_render_payload) do
         yield
       end
     end
 
     def notify_render_payload
-      { serializer: serializer, adapter: adapter }
+      {
+        serializer: serializer || ActiveModel::Serializer::Null,
+        adapter: adapter || ActiveModelSerializers::Adapter::Null
+      }
     end
 
     private

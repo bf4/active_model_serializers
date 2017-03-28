@@ -1,45 +1,71 @@
 module SerializationTesting
   def config
-    ActiveModel::Serializer.config
+    ActiveModelSerializers.config
   end
 
   private
 
   def generate_cached_serializer(obj)
-    ActiveModel::SerializableResource.new(obj).to_json
+    ActiveModelSerializers::SerializableResource.new(obj).to_json
+  end
+
+  def with_namespace_separator(separator)
+    original_separator = ActiveModelSerializers.config.jsonapi_namespace_separator
+    ActiveModelSerializers.config.jsonapi_namespace_separator = separator
+    yield
+  ensure
+    ActiveModelSerializers.config.jsonapi_namespace_separator = original_separator
+  end
+
+  def with_prepended_lookup(lookup_proc)
+    original_lookup = ActiveModelSerializers.config.serializer_lookup_cahin
+    ActiveModelSerializers.config.serializer_lookup_chain.unshift lookup_proc
+    yield
+  ensure
+    ActiveModelSerializers.config.serializer_lookup_cahin = original_lookup
   end
 
   # Aliased as :with_configured_adapter to clarify that
   # this method tests the configured adapter.
   # When not testing configuration, it may be preferable
-  # to pass in the +adapter+ option to <tt>ActiveModel::SerializableResource</tt>.
-  # e.g ActiveModel::SerializableResource.new(resource, adapter: :json_api)
+  # to pass in the +adapter+ option to <tt>ActiveModelSerializers::SerializableResource</tt>.
+  # e.g ActiveModelSerializers::SerializableResource.new(resource, adapter: :json_api)
   def with_adapter(adapter)
-    old_adapter = ActiveModel::Serializer.config.adapter
-    ActiveModel::Serializer.config.adapter = adapter
+    old_adapter = ActiveModelSerializers.config.adapter
+    ActiveModelSerializers.config.adapter = adapter
     yield
   ensure
-    ActiveModel::Serializer.config.adapter = old_adapter
+    ActiveModelSerializers.config.adapter = old_adapter
   end
-  alias_method :with_configured_adapter, :with_adapter
+  alias with_configured_adapter with_adapter
 
   def with_config(hash)
     old_config = config.dup
-    ActiveModel::Serializer.config.update(hash)
+    ActiveModelSerializers.config.update(hash)
     yield
   ensure
-    ActiveModel::Serializer.config.replace(old_config)
+    ActiveModelSerializers.config.replace(old_config)
+  end
+
+  def with_serializer_lookup_disabled
+    original_serializer_lookup = ActiveModelSerializers.config.serializer_lookup_enabled
+    ActiveModelSerializers.config.serializer_lookup_enabled = false
+    yield
+  ensure
+    ActiveModelSerializers.config.serializer_lookup_enabled = original_serializer_lookup
   end
 
   def serializable(resource, options = {})
-    ActiveModel::SerializableResource.new(resource, options)
+    ActiveModelSerializers::SerializableResource.new(resource, options)
   end
 end
 
-class Minitest::Test
-  def before_setup
-    ActionController::Base.cache_store.clear
-  end
+module Minitest
+  class Test
+    def before_setup
+      ActionController::Base.cache_store.clear
+    end
 
-  include SerializationTesting
+    include SerializationTesting
+  end
 end

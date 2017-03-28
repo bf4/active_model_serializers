@@ -2,9 +2,9 @@ require 'test_helper'
 
 module ActiveModel
   class Serializer
-    class AttributesTest < Minitest::Test
+    class AttributesTest < ActiveSupport::TestCase
       def setup
-        @profile = Profile.new({ name: 'Name 1', description: 'Description 1', comments: 'Comments 1' })
+        @profile = Profile.new(name: 'Name 1', description: 'Description 1', comments: 'Comments 1')
         @profile_serializer = ProfileSerializer.new(@profile)
         @comment = Comment.new(id: 1, body: 'ZOMG!!', date: '2015')
         @serializer_klass = Class.new(CommentSerializer)

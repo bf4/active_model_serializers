@@ -1,3 +1,5 @@
+[Back to Guides](../README.md)
+
 # Instrumentation
 
 ActiveModelSerializers uses the
@@ -15,7 +17,7 @@ Payload (example):
 ```ruby
 {
   serializer: PostSerializer,
-  adapter: ActiveModel::Serializer::Adapter::Attributes
+  adapter: ActiveModelSerializers::Adapter::Attributes
 }
 ```
 
@@ -30,6 +32,7 @@ ActiveSupport::Notifications.subscribe 'render.active_model_serializers' do |*ar
   # event.payload
   # whatever
 end
+```
 
 ## [LogSubscriber](http://api.rubyonrails.org/classes/ActiveSupport/LogSubscriber.html)
 

@@ -1,9 +1,40 @@
+[Back to Guides](../README.md)
+
 # Adapters
 
-AMS works through two components: **serializers** and **adapters**.
-Serializers describe _which_ attributes and relationships should be serialized.
-Adapters describe _how_ attributes and relationships should be serialized.
-You can use one of the built-in adapters (```Attributes``` is the default one) or create one by yourself, but you won't need to implement an adapter unless you wish to use a new format or media type with AMS.
+ActiveModelSerializers offers the ability to configure which adapter
+to use both globally and/or when serializing (usually when rendering).
+
+The global adapter configuration is set on [`ActiveModelSerializers.config`](configuration_options.md).
+It should be set only once, preferably at initialization.
+
+For example:
+
+```ruby
+ActiveModelSerializers.config.adapter = ActiveModelSerializers::Adapter::JsonApi
+```
+
+or
+
+```ruby
+ActiveModelSerializers.config.adapter = :json_api
+```
+
+or
+
+```ruby
+ActiveModelSerializers.config.adapter = :json
+```
+
+The local adapter option is in the format `adapter: adapter`, where `adapter` is
+any of the same values as set globally.
+
+The configured adapter can be set as a symbol, class, or class name, as described in
+[Advanced adapter configuration](adapters.md#advanced-adapter-configuration).
+
+The `Attributes` adapter does not include a root key. It is just the serialized attributes.
+
+Use either the `JSON` or `JSON API` adapters if you want the response document to have a root key.
 
 ## Built in Adapters
 
@@ -12,50 +43,156 @@ You can use one of the built-in adapters (```Attributes``` is the default one) o
 It's the default adapter, it generates a json response without a root key.
 Doesn't follow any specific convention.
 
+##### Example output
+
+```json
+{
+  "title": "Title 1",
+  "body": "Body 1",
+  "publish_at": "2020-03-16T03:55:25.291Z",
+  "author": {
+    "first_name": "Bob",
+    "last_name": "Jones"
+  },
+  "comments": [
+    {
+      "body": "cool"
+    },
+    {
+      "body": "awesome"
+    }
+  ]
+}
+```
+
 ### JSON
 
-It also generates a json response but always with a root key. The root key **can't be overridden**, and will be automatically defined accordingly to the objects being serialized.
+The json response is always rendered with a root key.
+
+The root key can be overridden by:
+* passing the `root` option in the render call. See details in the [Rendering Guides](rendering.md#overriding-the-root-key).
+* setting the `type` of the serializer. See details in the [Serializers Guide](serializers.md#type).
+
 Doesn't follow any specific convention.
+
+##### Example output
+
+```json
+{
+  "post": {
+    "title": "Title 1",
+    "body": "Body 1",
+    "publish_at": "2020-03-16T03:55:25.291Z",
+    "author": {
+      "first_name": "Bob",
+      "last_name": "Jones"
+    },
+    "comments": [{
+      "body": "cool"
+    }, {
+      "body": "awesome"
+    }]
+  }
+}
+```
 
 ### JSON API
 
-This adapter follows **version 1.0** of the format specified in
-[jsonapi.org/format](http://jsonapi.org/format). It will include the associated
-resources in the `"included"` member when the resource names are included in the
-`include` option.
+This adapter follows **version 1.0** of the [format specified](../jsonapi/schema.md) in
+[jsonapi.org/format](http://jsonapi.org/format).
 
-```ruby
-render @posts, include: ['authors', 'comments']
+##### Example output
+
+```json
+{
+  "data": {
+    "id": "1337",
+    "type": "posts",
+    "attributes": {
+      "title": "Title 1",
+      "body": "Body 1",
+      "publish-at": "2020-03-16T03:55:25.291Z"
+    },
+    "relationships": {
+      "author": {
+        "data": {
+          "id": "1",
+          "type": "authors"
+        }
+      },
+      "comments": {
+        "data": [{
+          "id": "7",
+          "type": "comments"
+        }, {
+          "id": "12",
+          "type": "comments"
+        }]
+      }
+    },
+    "links": {
+      "post-authors": "https://example.com/post_authors"
+    },
+    "meta": {
+      "rating": 5,
+      "favorite-count": 10
+    }
+  }
+}
 ```
 
-or
+#### Included
+
+It will include the associated resources in the `"included"` member
+when the resource names are included in the `include` option.
+Including nested associated resources is also supported.
 
 ```ruby
-render @posts, include: 'authors,comments'
+  render json: @posts, include: ['author', 'comments', 'comments.author']
+  # or
+  render json: @posts, include: 'author,comments,comments.author'
 ```
 
-The format of the `include` option can be either a String composed of a comma-separated list of [relationship paths](http://jsonapi.org/format/#fetching-includes), an Array of Symbols and Hashes, or a mix of both.
+In addition, two types of wildcards may be used:
 
-## Choosing an adapter
+- `*` includes one level of associations.
+- `**` includes all recursively.
 
-If you want to use a specify a default adapter, such as JsonApi, you can change this in an initializer:
+These can be combined with other paths.
 
 ```ruby
-ActiveModel::Serializer.config.adapter = ActiveModel::Serializer::Adapter::JsonApi
+  render json: @posts, include: '**' # or '*' for a single layer
 ```
 
-or
+The format of the `include` option can be either:
+
+- a String composed of a comma-separated list of [relationship paths](http://jsonapi.org/format/#fetching-includes).
+- an Array of Symbols and Hashes.
+- a mix of both.
+
+The following would render posts and include:
+
+- the author
+- the author's comments, and
+- every resource referenced by the author's comments (recursively).
+
+It could be combined, like above, with other paths in any combination desired.
 
 ```ruby
-ActiveModel::Serializer.config.adapter = :json_api
+  render json: @posts, include: 'author.comments.**'
 ```
 
-If you want to have a root key for each resource in your responses, you should use the Json or
-JsonApi adapters instead of the default Attributes:
+##### Security Considerations
+
+Since the included options may come from the query params (i.e. user-controller):
 
 ```ruby
-ActiveModel::Serializer.config.adapter = :json
+  render json: @posts, include: params[:include]
 ```
+
+The user could pass in `include=**`.
+
+We recommend filtering any user-supplied includes appropriately.
 
 ## Advanced adapter configuration
 
@@ -65,46 +202,46 @@ The default adapter can be configured, as above, to use any class given to it.
 
 An adapter may also be specified, e.g. when rendering, as a class or as a symbol.
 If a symbol, then the adapter must be, e.g. `:great_example`,
-`ActiveModel::Serializer::Adapter::GreatExample`, or registered.
+`ActiveModelSerializers::Adapter::GreatExample`, or registered.
 
 There are two ways to register an adapter:
 
-1) The simplest, is to subclass `ActiveModel::Serializer::Adapter`, e.g. the below will
-register the `Example::UsefulAdapter` as `:useful_adapter`.
+1) The simplest, is to subclass `ActiveModelSerializers::Adapter::Base`, e.g. the below will
+register the `Example::UsefulAdapter` as `"example/useful_adapter"`.
 
 ```ruby
 module Example
-  class UsefulAdapter < ActiveModel::Serializer::Adapter
+  class UsefulAdapter < ActiveModelSerializers::Adapter::Base
   end
 end
 ```
 
-You'll notice that the name it registers is the class name underscored, not the full namespace.
+You'll notice that the name it registers is the underscored namespace and class.
 
-Under the covers, when the `ActiveModel::Serializer::Adapter` is subclassed, it registers
-the subclass as `register(:useful_adapter, Example::UsefulAdapter)`
+Under the covers, when the `ActiveModelSerializers::Adapter::Base` is subclassed, it registers
+the subclass as `register("example/useful_adapter", Example::UsefulAdapter)`
 
 2) Any class can be registered as an adapter by calling `register` directly on the
-`ActiveModel::Serializer::Adapter` class. e.g., the below registers `MyAdapter` as
+`ActiveModelSerializers::Adapter` class. e.g., the below registers `MyAdapter` as
 `:special_adapter`.
 
 ```ruby
 class MyAdapter; end
-ActiveModel::Serializer::Adapter.register(:special_adapter, MyAdapter)
+ActiveModelSerializers::Adapter.register(:special_adapter, MyAdapter)
 ```
 
 ### Looking up an adapter
 
 | Method | Return value |
 | :------------ |:---------------|
-| `ActiveModel::Serializer::Adapter.adapter_map` | A Hash of all known adapters `{ adapter_name => adapter_class }` |
-| `ActiveModel::Serializer::Adapter.adapters` | A (sorted) Array of all known `adapter_names` |
-| `ActiveModel::Serializer::Adapter.lookup(name_or_klass)` |  The `adapter_class`, else raises an `ActiveModel::Serializer::Adapter::UnknownAdapter` error |
-| `ActiveModel::Serializer::Adapter.adapter_class(adapter)` | Delegates to `ActiveModel::Serializer::Adapter.lookup(adapter)` |
-| `ActiveModel::Serializer.adapter` | A convenience method for `ActiveModel::Serializer::Adapter.lookup(config.adapter)` |
+| `ActiveModelSerializers::Adapter.adapter_map` | A Hash of all known adapters `{ adapter_name => adapter_class }` |
+| `ActiveModelSerializers::Adapter.adapters` | A (sorted) Array of all known `adapter_names` |
+| `ActiveModelSerializers::Adapter.lookup(name_or_klass)` |  The `adapter_class`, else raises an `ActiveModelSerializers::Adapter::UnknownAdapter` error |
+| `ActiveModelSerializers::Adapter.adapter_class(adapter)` | Delegates to `ActiveModelSerializers::Adapter.lookup(adapter)` |
+| `ActiveModelSerializers::Adapter.configured_adapter` | A convenience method for `ActiveModelSerializers::Adapter.lookup(config.adapter)` |
 
 The registered adapter name is always a String, but may be looked up as a Symbol or String.
 Helpfully, the Symbol or String is underscored, so that `get(:my_adapter)` and `get("MyAdapter")`
 may both be used.
 
-For more information, see [the Adapter class on GitHub](https://github.com/rails-api/active_model_serializers/blob/master/lib/active_model/serializer/adapter.rb)
+For more information, see [the Adapter class on GitHub](https://github.com/rails-api/active_model_serializers/blob/master/lib/active_model_serializers/adapter.rb)

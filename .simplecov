@@ -19,7 +19,6 @@ ENV['FULL_BUILD'] ||= ENV['CI']
 # rubocop:enable Style/DoubleNegation
 
 ## CONFIGURE SIMPLECOV
-SimpleCov.pid = $$ # In case there's any forking
 
 SimpleCov.profiles.define 'app' do
   coverage_dir 'coverage'
@@ -41,6 +40,7 @@ SimpleCov.profiles.define 'app' do
   add_filter '/config/'
   add_filter '/db/'
   add_filter 'tasks'
+  add_filter '/.bundle/'
 end
 
 ## START TRACKING COVERAGE (before activating SimpleCov)

@@ -3,7 +3,6 @@ require 'test_helper'
 module ActionController
   module Serialization
     class ImplicitSerializerTest < ActionController::TestCase
-      include ActiveSupport::Testing::Stream
       class ImplicitSerializationTestController < ActionController::Base
         include SerializationTesting
         def render_using_implicit_serializer
@@ -45,6 +44,16 @@ module ActionController
           render json: @profiles, meta: { total: 10 }
         end
 
+        def render_array_using_implicit_serializer_and_links
+          with_adapter ActiveModelSerializers::Adapter::JsonApi do
+            @profiles = [
+              Profile.new(name: 'Name 1', description: 'Description 1', comments: 'Comments 1')
+            ]
+
+            render json: @profiles, links: { self: 'http://example.com/api/profiles/1' }
+          end
+        end
+
         def render_object_with_cache_enabled
           @comment = Comment.new(id: 1, body: 'ZOMG A COMMENT')
           @author  = Author.new(id: 1, name: 'Joao Moura.')
@@ -65,7 +74,7 @@ module ActionController
         end
 
         def update_and_render_object_with_cache_enabled
-          @post.updated_at = Time.now
+          @post.updated_at = Time.zone.now
 
           generate_cached_serializer(@post)
           render json: @post
@@ -82,7 +91,7 @@ module ActionController
 
           expires_in = [
             PostSerializer._cache_options[:expires_in],
-            CommentSerializer._cache_options[:expires_in],
+            CommentSerializer._cache_options[:expires_in]
           ].max + 200
 
           Timecop.travel(Time.zone.now + expires_in) do
@@ -126,7 +135,7 @@ module ActionController
           like = Like.new(id: 1, likeable: comment, time: 3.days.ago)
 
           generate_cached_serializer(like)
-          like.likable = comment2
+          like.likeable = comment2
           like.time = Time.zone.now.to_s
 
           render json: like
@@ -154,7 +163,7 @@ module ActionController
         end
         expected = {
           data: {
-            id: assigns(:profile).id.to_s,
+            id: @controller.instance_variable_get(:@profile).id.to_s,
             type: 'profiles',
             attributes: {
               name: 'Name 1',
@@ -171,7 +180,7 @@ module ActionController
         with_adapter :json do
           get :render_array_using_custom_root
         end
-        expected = { custom_roots: [{ name: 'Name 1', description: 'Description 1' }] }
+        expected = { custom_root: [{ name: 'Name 1', description: 'Description 1' }] }
         assert_equal 'application/json', @response.content_type
         assert_equal expected.to_json, @response.body
       end
@@ -181,7 +190,7 @@ module ActionController
           get :render_array_that_is_empty_using_custom_root
         end
 
-        expected = { custom_roots: [] }
+        expected = { custom_root: [] }
         assert_equal 'application/json', @response.content_type
         assert_equal expected.to_json, @response.body
       end
@@ -237,7 +246,7 @@ module ActionController
         expected = {
           data: [
             {
-              id: assigns(:profiles).first.id.to_s,
+              id: @controller.instance_variable_get(:@profiles).first.id.to_s,
               type: 'profiles',
               attributes: {
                 name: 'Name 1',
@@ -254,6 +263,29 @@ module ActionController
         assert_equal expected.to_json, @response.body
       end
 
+      def test_render_array_using_implicit_serializer_and_links
+        get :render_array_using_implicit_serializer_and_links
+
+        expected = {
+          data: [
+            {
+              id: @controller.instance_variable_get(:@profiles).first.id.to_s,
+              type: 'profiles',
+              attributes: {
+                name: 'Name 1',
+                description: 'Description 1'
+              }
+            }
+          ],
+          links: {
+            self: 'http://example.com/api/profiles/1'
+          }
+        }
+
+        assert_equal 'application/json', @response.content_type
+        assert_equal expected.to_json, @response.body
+      end
+
       def test_render_with_cache_enable
         expected = {
           id: 1,
@@ -262,7 +294,8 @@ module ActionController
           comments: [
             {
               id: 1,
-              body: 'ZOMG A COMMENT' }
+              body: 'ZOMG A COMMENT'
+            }
           ],
           blog: {
             id: 999,
@@ -301,7 +334,8 @@ module ActionController
           comments: [
             {
               id: 1,
-              body: 'ZOMG A COMMENT' }
+              body: 'ZOMG A COMMENT'
+            }
           ],
           blog: {
             id: 999,
@@ -375,7 +409,8 @@ module ActionController
           comments: [
             {
               id: 1,
-              body: 'ZOMG A COMMENT' }
+              body: 'ZOMG A COMMENT'
+            }
           ],
           blog: {
             id: 999,
@@ -405,9 +440,9 @@ module ActionController
             false
           end
         end.new
-        assert_match(/adapter: false/, (capture(:stderr) do
+        assert_output(nil, /adapter: false/) do
           controller.get_serializer(Profile.new)
-        end))
+        end
       end
 
       def test_dont_warn_overridding_use_adapter_as_truthy_on_controller_instance
@@ -416,19 +451,21 @@ module ActionController
             true
           end
         end.new
-        assert_equal '', (capture(:stderr) do
+        assert_output(nil, '') do
           controller.get_serializer(Profile.new)
-        end)
+        end
       end
 
-      def test_render_event_is_emmited
-        ActiveSupport::Notifications.subscribe('render.active_model_serializers') do |name|
+      def test_render_event_is_emitted
+        subscriber = ::ActiveSupport::Notifications.subscribe('render.active_model_serializers') do |name|
           @name = name
         end
 
         get :render_using_implicit_serializer
 
         assert_equal 'render.active_model_serializers', @name
+      ensure
+        ActiveSupport::Notifications.unsubscribe(subscriber) if subscriber
       end
     end
   end

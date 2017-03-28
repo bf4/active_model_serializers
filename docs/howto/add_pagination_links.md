@@ -1,3 +1,5 @@
+[Back to Guides](../README.md)
+
 # How to add pagination links
 
 ### JSON API adapter
@@ -7,6 +9,10 @@ the resource is paginated and if you are using the ```JsonApi``` adapter.
 
 If you want pagination links in your response, use [Kaminari](https://github.com/amatsuda/kaminari)
 or [WillPaginate](https://github.com/mislav/will_paginate).
+
+Although the other adapters do not have this feature, it is possible to
+implement pagination links to `JSON` adapter. For more information about it,
+please check our docs.
 
 ###### Kaminari examples
 
@@ -33,7 +39,7 @@ render json: @posts
 ```
 
 ```ruby
-ActiveModel::Serializer.config.adapter = :json_api
+ActiveModelSerializers.config.adapter = :json_api
 ```
 
 ex:
@@ -61,39 +67,37 @@ ex:
 }
 ```
 
-AMS pagination relies on a paginated collection with the methods `current_page`, `total_pages`, and `size`, such as are supported by both [Kaminari](https://github.com/amatsuda/kaminari) or [WillPaginate](https://github.com/mislav/will_paginate).
+ActiveModelSerializers pagination relies on a paginated collection with the methods `current_page`, `total_pages`, and `size`, such as are supported by both [Kaminari](https://github.com/amatsuda/kaminari) or [WillPaginate](https://github.com/mislav/will_paginate).
 
 
 ### JSON adapter
 
-If you are using `JSON` adapter, pagination links will not be included automatically, but it is possible to do so using `meta` key.
+If you are not using `JSON` adapter, pagination links will not be included automatically, but it is possible to do so using `meta` key.
 
-In your action specify a custom serializer.
-```ruby
-render json: @posts, serializer: PaginatedSerializer, each_serializer: PostPreviewSerializer
-```
+Add this method to your base API controller.
 
-And then, you could do something like the following class.
 ```ruby
-class PaginatedSerializer < ActiveModel::Serializer::CollectionSerializer
-  def initialize(object, options={})
-    meta_key = options[:meta_key] || :meta
-    options[meta_key] ||= {}
-    options[meta_key] = {
-      current_page: object.current_page,
-      next_page: object.next_page,
-      prev_page: object.prev_page,
-      total_pages: object.total_pages,
-      total_count: object.total_count
-    }
-    super(object, options)
-  end
+def pagination_dict(collection)
+  {
+    current_page: collection.current_page,
+    next_page: collection.next_page,
+    prev_page: collection.prev_page, # use collection.previous_page when using will_paginate
+    total_pages: collection.total_pages,
+    total_count: collection.total_count
+  }
 end
 ```
+
+Then, use it on your render method.
+
+```ruby
+render json: posts, meta: pagination_dict(posts)
+```
+
 ex.
 ```json
 {
-  "articles": [
+  "posts": [
     {
       "id": 2,
       "title": "JSON API paints my bikeshed!",
@@ -108,6 +112,25 @@ ex.
     "total_count": 10
   }
 }
+```
+
+You can also achieve the same result if you have a helper method that adds the pagination info in the meta tag. For instance, in your action specify a custom serializer.
+
+```ruby
+render json: @posts, each_serializer: PostPreviewSerializer, meta: meta_attributes(@posts)
+```
+
+```ruby
+#expects pagination!
+def meta_attributes(collection, extra_meta = {})
+  {
+    current_page: collection.current_page,
+    next_page: collection.next_page,
+    prev_page: collection.prev_page, # use collection.previous_page when using will_paginate
+    total_pages: collection.total_pages,
+    total_count: collection.total_count
+  }.merge(extra_meta)
+end
 ```
 
 ### Attributes adapter

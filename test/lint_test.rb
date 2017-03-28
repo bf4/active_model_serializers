@@ -2,7 +2,7 @@ require 'test_helper'
 
 module ActiveModel
   class Serializer
-    class LintTest < Minitest::Test
+    class LintTest < ActiveSupport::TestCase
       include ActiveModel::Serializer::Lint::Tests
 
       class CompliantResource
@@ -25,6 +25,15 @@ module ActiveModel
         end
 
         def updated_at
+        end
+
+        def errors
+        end
+
+        def self.human_attribute_name(_, _ = {})
+        end
+
+        def self.lookup_ancestors
         end
 
         def self.model_name

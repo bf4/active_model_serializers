@@ -2,8 +2,9 @@ require 'test_helper'
 
 module ActiveModel
   class Serializer
-    class AssociationMacrosTest < Minitest::Test
-      AuthorSummarySerializer = Class.new
+    class AssociationMacrosTest < ActiveSupport::TestCase
+      class AuthorSummarySerializer < ActiveModel::Serializer; end
+
       class AssociationsTestSerializer < Serializer
         belongs_to :author, serializer: AuthorSummarySerializer
         has_many :comments
@@ -11,7 +12,7 @@ module ActiveModel
       end
 
       def before_setup
-        @reflections = AssociationsTestSerializer._reflections
+        @reflections = AssociationsTestSerializer._reflections.values
       end
 
       def test_has_one_defines_reflection

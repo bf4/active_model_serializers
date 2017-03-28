@@ -1,16 +1,19 @@
 require 'test_helper'
-
 module ActiveModel
   class Serializer
-    class AssociationsTest < Minitest::Test
+    class AssociationsTest < ActiveSupport::TestCase
+      class ModelWithoutSerializer < ::Model
+        attributes :id, :name
+      end
+
       def setup
         @author = Author.new(name: 'Steve K.')
         @author.bio = nil
         @author.roles = []
-        @blog = Blog.new({ name: 'AMS Blog' })
-        @post = Post.new({ title: 'New Post', body: 'Body' })
-        @tag = Tag.new({ name: '#hashtagged' })
-        @comment = Comment.new({ id: 1, body: 'ZOMG A COMMENT' })
+        @blog = Blog.new(name: 'AMS Blog')
+        @post = Post.new(title: 'New Post', body: 'Body')
+        @tag = ModelWithoutSerializer.new(id: 'tagid', name: '#hashtagged')
+        @comment = Comment.new(id: 1, body: 'ZOMG A COMMENT')
         @post.comments = [@comment]
         @post.tags = [@tag]
         @post.blog = @blog
@@ -19,7 +22,7 @@ module ActiveModel
         @post.author = @author
         @author.posts = [@post]
 
-        @post_serializer = PostSerializer.new(@post, { custom_options: true })
+        @post_serializer = PostSerializer.new(@post, custom_options: true)
         @author_serializer = AuthorSerializer.new(@author)
         @comment_serializer = CommentSerializer.new(@comment)
       end
@@ -32,14 +35,14 @@ module ActiveModel
 
           case key
           when :posts
-            assert_equal({}, options)
-            assert_kind_of(ActiveModel::Serializer.config.collection_serializer, serializer)
+            assert_equal true, options.fetch(:include_data)
+            assert_kind_of(ActiveModelSerializers.config.collection_serializer, serializer)
           when :bio
-            assert_equal({}, options)
+            assert_equal true, options.fetch(:include_data)
             assert_nil serializer
           when :roles
-            assert_equal({}, options)
-            assert_kind_of(ActiveModel::Serializer.config.collection_serializer, serializer)
+            assert_equal true, options.fetch(:include_data)
+            assert_kind_of(ActiveModelSerializers.config.collection_serializer, serializer)
           else
             flunk "Unknown association: #{key}"
           end
@@ -47,23 +50,33 @@ module ActiveModel
       end
 
       def test_has_many_with_no_serializer
-        PostWithTagsSerializer.new(@post).associations.each do |association|
+        post_serializer_class = Class.new(ActiveModel::Serializer) do
+          attributes :id
+          has_many :tags
+        end
+        post_serializer_class.new(@post).associations.each do |association|
           key = association.key
           serializer = association.serializer
           options = association.options
 
-          assert_equal key, :tags
-          assert_equal serializer, nil
-          assert_equal [{ name: '#hashtagged' }].to_json, options[:virtual_value].to_json
+          assert_equal :tags, key
+          assert_nil serializer
+          assert_equal [{ id: 'tagid', name: '#hashtagged' }].to_json, options[:virtual_value].to_json
         end
       end
 
       def test_serializer_options_are_passed_into_associations_serializers
         association = @post_serializer
-                        .associations
-                        .detect { |assoc| assoc.key == :comments }
+                      .associations
+                      .detect { |assoc| assoc.key == :comments }
 
-        assert association.serializer.first.custom_options[:custom_options]
+        comment_serializer = association.serializer.first
+        class << comment_serializer
+          def custom_options
+            instance_options
+          end
+        end
+        assert comment_serializer.custom_options.fetch(:custom_options)
       end
 
       def test_belongs_to
@@ -80,7 +93,7 @@ module ActiveModel
             flunk "Unknown association: #{key}"
           end
 
-          assert_equal({}, association.options)
+          assert_equal true, association.options.fetch(:include_data)
         end
       end
 
@@ -104,13 +117,13 @@ module ActiveModel
         end
 
         assert(
-          PostSerializer._reflections.all? do |reflection|
-            inherited_klass._reflections.include?(reflection)
+          PostSerializer._reflections.values.all? do |reflection|
+            inherited_klass._reflections.values.include?(reflection)
           end
         )
 
         assert(
-          inherited_klass._reflections.any? do |reflection|
+          inherited_klass._reflections.values.any? do |reflection|
             reflection.name == :top_comments
           end
         )
@@ -129,7 +142,7 @@ module ActiveModel
       class InlineAssociationTestPostSerializer < ActiveModel::Serializer
         has_many :comments
         has_many :comments, key: :last_comments do
-          last(1)
+          object.comments.last(1)
         end
       end
 
@@ -143,32 +156,37 @@ module ActiveModel
         )
         actual = serializable(post, adapter: :attributes, serializer: InlineAssociationTestPostSerializer).as_json
         expected = {
-          :comments =>           [
-            { :id => 1, :contents => 'first comment' },
-            { :id => 2, :contents => 'last comment' }
+          comments: [
+            { id: 1, contents: 'first comment' },
+            { id: 2, contents: 'last comment' }
           ],
-          :last_comments =>           [
-            { :id => 2, :contents => 'last comment' }
+          last_comments: [
+            { id: 2, contents: 'last comment' }
           ]
         }
 
         assert_equal expected, actual
+      ensure
+        ::ARModels::Post.delete_all
+        ::ARModels::Comment.delete_all
       end
 
-      class NamespacedResourcesTest < Minitest::Test
+      class NamespacedResourcesTest < ActiveSupport::TestCase
         class ResourceNamespace
-          Post    = Class.new(::Model)
-          Comment = Class.new(::Model)
-          Author  = Class.new(::Model)
-          Description = Class.new(::Model)
+          class Post < ::Model
+            associations :comments, :author, :description
+          end
+          class Comment < ::Model; end
+          class Author  < ::Model; end
+          class Description < ::Model; end
           class PostSerializer < ActiveModel::Serializer
             has_many :comments
             belongs_to :author
             has_one :description
           end
-          CommentSerializer     = Class.new(ActiveModel::Serializer)
-          AuthorSerializer      = Class.new(ActiveModel::Serializer)
-          DescriptionSerializer = Class.new(ActiveModel::Serializer)
+          class CommentSerializer     < ActiveModel::Serializer; end
+          class AuthorSerializer      < ActiveModel::Serializer; end
+          class DescriptionSerializer < ActiveModel::Serializer; end
         end
 
         def setup
@@ -197,18 +215,20 @@ module ActiveModel
         end
       end
 
-      class NestedSerializersTest < Minitest::Test
-        Post    = Class.new(::Model)
-        Comment = Class.new(::Model)
-        Author  = Class.new(::Model)
-        Description = Class.new(::Model)
+      class NestedSerializersTest < ActiveSupport::TestCase
+        class Post < ::Model
+          associations :comments, :author, :description
+        end
+        class Comment < ::Model; end
+        class Author  < ::Model; end
+        class Description < ::Model; end
         class PostSerializer < ActiveModel::Serializer
           has_many :comments
-          CommentSerializer = Class.new(ActiveModel::Serializer)
+          class CommentSerializer < ActiveModel::Serializer; end
           belongs_to :author
-          AuthorSerializer = Class.new(ActiveModel::Serializer)
+          class AuthorSerializer < ActiveModel::Serializer; end
           has_one :description
-          DescriptionSerializer = Class.new(ActiveModel::Serializer)
+          class DescriptionSerializer < ActiveModel::Serializer; end
         end
 
         def setup
@@ -234,6 +254,136 @@ module ActiveModel
               flunk "Unknown association: #{key}"
             end
           end
+        end
+
+        # rubocop:disable Metrics/AbcSize
+        def test_conditional_associations
+          model = Class.new(::Model) do
+            attributes :true, :false
+            associations :association
+          end.new(true: true, false: false)
+
+          scenarios = [
+            { options: { if:     :true  }, included: true  },
+            { options: { if:     :false }, included: false },
+            { options: { unless: :false }, included: true  },
+            { options: { unless: :true  }, included: false },
+            { options: { if:     'object.true'  }, included: true  },
+            { options: { if:     'object.false' }, included: false },
+            { options: { unless: 'object.false' }, included: true  },
+            { options: { unless: 'object.true'  }, included: false },
+            { options: { if:     -> { object.true }  }, included: true  },
+            { options: { if:     -> { object.false } }, included: false },
+            { options: { unless: -> { object.false } }, included: true  },
+            { options: { unless: -> { object.true }  }, included: false },
+            { options: { if:     -> (s) { s.object.true }  }, included: true  },
+            { options: { if:     -> (s) { s.object.false } }, included: false },
+            { options: { unless: -> (s) { s.object.false } }, included: true  },
+            { options: { unless: -> (s) { s.object.true }  }, included: false }
+          ]
+
+          scenarios.each do |s|
+            serializer = Class.new(ActiveModel::Serializer) do
+              belongs_to :association, s[:options]
+
+              def true
+                true
+              end
+
+              def false
+                false
+              end
+            end
+
+            hash = serializable(model, serializer: serializer).serializable_hash
+            assert_equal(s[:included], hash.key?(:association), "Error with #{s[:options]}")
+          end
+        end
+
+        def test_illegal_conditional_associations
+          exception = assert_raises(TypeError) do
+            Class.new(ActiveModel::Serializer) do
+              belongs_to :x, if: nil
+            end
+          end
+
+          assert_match(/:if should be a Symbol, String or Proc/, exception.message)
+        end
+      end
+
+      class InheritedSerializerTest < ActiveSupport::TestCase
+        class PostSerializer < ActiveModel::Serializer
+          belongs_to :author
+          has_many :comments
+          belongs_to :blog
+        end
+
+        class InheritedPostSerializer < PostSerializer
+          belongs_to :author, polymorphic: true
+          has_many :comments, key: :reviews
+        end
+
+        class AuthorSerializer < ActiveModel::Serializer
+          has_many :posts
+          has_many :roles
+          has_one :bio
+        end
+
+        class InheritedAuthorSerializer < AuthorSerializer
+          has_many :roles, polymorphic: true
+          has_one :bio, polymorphic: true
+        end
+
+        def setup
+          @author = Author.new(name: 'Steve K.')
+          @post = Post.new(title: 'New Post', body: 'Body')
+          @post_serializer = PostSerializer.new(@post)
+          @author_serializer = AuthorSerializer.new(@author)
+          @inherited_post_serializer = InheritedPostSerializer.new(@post)
+          @inherited_author_serializer = InheritedAuthorSerializer.new(@author)
+          @author_associations = @author_serializer.associations.to_a
+          @inherited_author_associations = @inherited_author_serializer.associations.to_a
+          @post_associations = @post_serializer.associations.to_a
+          @inherited_post_associations = @inherited_post_serializer.associations.to_a
+        end
+
+        test 'an author serializer must have [posts,roles,bio] associations' do
+          expected = [:posts, :roles, :bio].sort
+          result = @author_serializer.associations.map(&:name).sort
+          assert_equal(result, expected)
+        end
+
+        test 'a post serializer must have [author,comments,blog] associations' do
+          expected = [:author, :comments, :blog].sort
+          result = @post_serializer.associations.map(&:name).sort
+          assert_equal(result, expected)
+        end
+
+        test 'a serializer inheriting from another serializer can redefine has_many and has_one associations' do
+          expected = [:roles, :bio].sort
+          result = (@inherited_author_associations - @author_associations).map(&:name).sort
+          assert_equal(result, expected)
+        end
+
+        test 'a serializer inheriting from another serializer can redefine belongs_to associations' do
+          assert_equal [:author, :comments, :blog], @post_associations.map(&:name)
+          assert_equal [:author, :comments, :blog, :comments], @inherited_post_associations.map(&:name)
+
+          refute @post_associations.detect { |assoc| assoc.name == :author }.options.key?(:polymorphic)
+          assert_equal true, @inherited_post_associations.detect { |assoc| assoc.name == :author }.options.fetch(:polymorphic)
+
+          refute @post_associations.detect { |assoc| assoc.name == :comments }.options.key?(:key)
+          original_comment_assoc, new_comments_assoc = @inherited_post_associations.select { |assoc| assoc.name == :comments }
+          refute original_comment_assoc.options.key?(:key)
+          assert_equal :reviews, new_comments_assoc.options.fetch(:key)
+
+          assert_equal @post_associations.detect { |assoc| assoc.name == :blog }, @inherited_post_associations.detect { |assoc| assoc.name == :blog }
+        end
+
+        test 'a serializer inheriting from another serializer can have an additional association with the same name but with different key' do
+          expected = [:author, :comments, :blog, :reviews].sort
+          result = @inherited_post_serializer.associations.map { |a| a.options.fetch(:key, a.name) }.sort
+          assert_equal(result, expected)
         end
       end
     end

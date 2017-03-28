@@ -3,37 +3,53 @@ language: ruby
 sudo: false
 
 rvm:
-  - 2.0.0
   - 2.1
-  - 2.2.3
+  - 2.2.6
+  - 2.3.3
   - ruby-head
-  - rbx-2
+  - jruby-9.1.5.0 # is precompiled per http://rubies.travis-ci.org/
+  - jruby-head
 
+jdk:
+  - oraclejdk8
+
+before_install:
+  - gem update --system
+  - rvm @global do gem uninstall bundler -a -x
+  - rvm @global do gem install bundler -v 1.13.7
 install: bundle install --path=vendor/bundle --retry=3 --jobs=3
 cache:
   directories:
     - vendor/bundle
 
 script:
-  - env CAPTURE_STDERR=${CAPTURE_STDERR:-false} bundle exec rake ci
-
+  - bundle exec rake ci
+after_success:
+  - codeclimate-test-reporter
 env:
-  - "RAILS_VERSION=4.0"
-  - "RAILS_VERSION=4.1"
-  - "RAILS_VERSION=4.2"
-  - "RAILS_VERSION=master"
+  global:
+    - "JRUBY_OPTS='--dev -J-Xmx1024M --debug'"
+  matrix:
+    - "RAILS_VERSION=4.1"
+    - "RAILS_VERSION=4.2"
+    - "RAILS_VERSION=5.0"
+    - "RAILS_VERSION=master"
 
 matrix:
   exclude:
-  - rvm: 2.0.0
-    env: RAILS_VERSION=master
   - rvm: 2.1
     env: RAILS_VERSION=master
-  include:
-  - rvm: 2.2
-    env: CAPTURE_STDERR=true
-  - rvm: jruby-19mode
-    env: JRUBY_OPTS='--server -Xcompile.invokedynamic=false -Xcli.debug=true --debug'
+  - rvm: jruby-9.1.5.0
+    env: RAILS_VERSION=master
+  - rvm: jruby-head
+    env: RAILS_VERSION=master
+  - rvm: 2.1
+    env: RAILS_VERSION=5.0
+  - rvm: jruby-9.1.5.0
+    env: RAILS_VERSION=5.0
+  - rvm: jruby-head
+    env: RAILS_VERSION=5.0
   allow_failures:
     - rvm: ruby-head
+    - rvm: jruby-head
   fast_finish: true

@@ -2,7 +2,7 @@ require 'test_helper'
 
 module ActiveModel
   class Serializer
-    class MetaTest < Minitest::Test
+    class MetaTest < ActiveSupport::TestCase
       def setup
         @blog = Blog.new(id: 1,
                          name: 'AMS Hints',
@@ -11,11 +11,12 @@ module ActiveModel
       end
 
       def test_meta_is_present_with_root
-        actual = ActiveModel::SerializableResource.new(
+        actual = ActiveModelSerializers::SerializableResource.new(
           @blog,
           adapter: :json,
           serializer: AlternateBlogSerializer,
-          meta: { total: 10 }).as_json
+          meta: { total: 10 }
+        ).as_json
         expected = {
           blog: {
             id: 1,
@@ -28,12 +29,45 @@ module ActiveModel
         assert_equal(expected, actual)
       end
 
+      def test_meta_is_not_included_when_blank
+        actual = ActiveModelSerializers::SerializableResource.new(
+          @blog,
+          adapter: :json,
+          serializer: AlternateBlogSerializer,
+          meta: {}
+        ).as_json
+        expected = {
+          blog: {
+            id: 1,
+            title: 'AMS Hints'
+          }
+        }
+        assert_equal(expected, actual)
+      end
+
+      def test_meta_is_not_included_when_empty_string
+        actual = ActiveModelSerializers::SerializableResource.new(
+          @blog,
+          adapter: :json,
+          serializer: AlternateBlogSerializer,
+          meta: ''
+        ).as_json
+        expected = {
+          blog: {
+            id: 1,
+            title: 'AMS Hints'
+          }
+        }
+        assert_equal(expected, actual)
+      end
+
       def test_meta_is_not_included_when_root_is_missing
-        actual = ActiveModel::SerializableResource.new(
+        actual = ActiveModelSerializers::SerializableResource.new(
           @blog,
           adapter: :attributes,
           serializer: AlternateBlogSerializer,
-          meta: { total: 10 }).as_json
+          meta: { total: 10 }
+        ).as_json
         expected = {
           id: 1,
           title: 'AMS Hints'
@@ -42,12 +76,13 @@ module ActiveModel
       end
 
       def test_meta_key_is_used
-        actual = ActiveModel::SerializableResource.new(
+        actual = ActiveModelSerializers::SerializableResource.new(
           @blog,
           adapter: :json,
           serializer: AlternateBlogSerializer,
           meta: { total: 10 },
-          meta_key: 'haha_meta').as_json
+          meta_key: 'haha_meta'
+        ).as_json
         expected = {
           blog: {
             id: 1,
@@ -60,29 +95,65 @@ module ActiveModel
         assert_equal(expected, actual)
       end
 
-      def test_meta_key_is_used_with_json_api
-        actual = ActiveModel::SerializableResource.new(
+      def test_meta_key_is_not_used_with_json_api
+        actual = ActiveModelSerializers::SerializableResource.new(
           @blog,
           adapter: :json_api,
           serializer: AlternateBlogSerializer,
           meta: { total: 10 },
-          meta_key: 'haha_meta').as_json
+          meta_key: 'haha_meta'
+        ).as_json
         expected = {
           data: {
             id: '1',
             type: 'blogs',
             attributes: { title: 'AMS Hints' }
           },
-          'haha_meta' => { total: 10 }
+          meta: { total: 10 }
+        }
+        assert_equal(expected, actual)
+      end
+
+      def test_meta_key_is_not_present_when_empty_hash_with_json_api
+        actual = ActiveModelSerializers::SerializableResource.new(
+          @blog,
+          adapter: :json_api,
+          serializer: AlternateBlogSerializer,
+          meta: {}
+        ).as_json
+        expected = {
+          data: {
+            id: '1',
+            type: 'blogs',
+            attributes: { title: 'AMS Hints' }
+          }
+        }
+        assert_equal(expected, actual)
+      end
+
+      def test_meta_key_is_not_present_when_empty_string_with_json_api
+        actual = ActiveModelSerializers::SerializableResource.new(
+          @blog,
+          adapter: :json_api,
+          serializer: AlternateBlogSerializer,
+          meta: ''
+        ).as_json
+        expected = {
+          data: {
+            id: '1',
+            type: 'blogs',
+            attributes: { title: 'AMS Hints' }
+          }
         }
         assert_equal(expected, actual)
       end
 
       def test_meta_is_not_present_on_arrays_without_root
-        actual = ActiveModel::SerializableResource.new(
+        actual = ActiveModelSerializers::SerializableResource.new(
           [@blog],
           adapter: :attributes,
-          meta: { total: 10 }).as_json
+          meta: { total: 10 }
+        ).as_json
         expected = [{
           id: 1,
           name: 'AMS Hints',
@@ -100,11 +171,12 @@ module ActiveModel
       end
 
       def test_meta_is_present_on_arrays_with_root
-        actual = ActiveModel::SerializableResource.new(
+        actual = ActiveModelSerializers::SerializableResource.new(
           [@blog],
           adapter: :json,
           meta: { total: 10 },
-          meta_key: 'haha_meta').as_json
+          meta_key: 'haha_meta'
+        ).as_json
         expected = {
           blogs: [{
             id: 1,

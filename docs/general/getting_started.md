@@ -1,20 +1,6 @@
+[Back to Guides](../README.md)
+
 # Getting Started
-
-## Installation
-
-### ActiveModel::Serializer is already included on Rails >= 5
-
-Add this line to your application's Gemfile:
-
-```
-gem 'active_model_serializers'
-```
-
-And then execute:
-
-```
-$ bundle
-```
 
 ## Creating a Serializer
 
@@ -33,7 +19,7 @@ the serializer generator:
 $ rails g serializer post
 ```
 
-The generated seralizer will contain basic `attributes` and
+The generated serializer will contain basic `attributes` and
 `has_many`/`has_one`/`belongs_to` declarations, based on the model. For example:
 
 ```ruby
@@ -42,7 +28,6 @@ class PostSerializer < ActiveModel::Serializer
 
   has_many :comments
   has_one :author
-
 end
 ```
 
@@ -52,14 +37,21 @@ and
 class CommentSerializer < ActiveModel::Serializer
   attributes :name, :body
 
-  belongs_to :post_id
-
+  belongs_to :post
 end
 ```
 
+The attribute names are a **whitelist** of attributes to be serialized.
+
+The `has_many`, `has_one`, and `belongs_to` declarations describe relationships between
+resources. By default, when you serialize a `Post`, you will get its `Comments`
+as well.
+
+For more information, see [Serializers](/docs/general/serializers.md).
+
 ### Namespaced Models
 
-When serializing a model inside a namespace, such as `Api::V1::Post`, AMS will expect the corresponding serializer to be inside the same namespace (namely `Api::V1::PostSerializer`).
+When serializing a model inside a namespace, such as `Api::V1::Post`, ActiveModelSerializers will expect the corresponding serializer to be inside the same namespace (namely `Api::V1::PostSerializer`).
 
 ### Model Associations and Nested Serializers
 
@@ -69,7 +61,7 @@ class PostSerializer < ActiveModel::Serializer
   has_many :comments
 end
 ```
-AMS will look for `PostSerializer::CommentSerializer` in priority, and fall back to `::CommentSerializer` in case the former does not exist. This allows for more control over the way a model gets serialized as an association of an other model.
+ActiveModelSerializers will look for `PostSerializer::CommentSerializer` in priority, and fall back to `::CommentSerializer` in case the former does not exist. This allows for more control over the way a model gets serialized as an association of an other model.
 
 For example, in the following situation:
 
@@ -86,11 +78,39 @@ class PostSerializer < ActiveModel::Serializer
 end
 ```
 
-AMS will use `PostSerializer::CommentSerializer` (thus including only the `:body_short` attribute) when serializing a `Comment` as part of a `Post`, but use `::CommentSerializer` when serializing a `Comment` directly (thus including `:body, :date, :nb_likes`).
+ActiveModelSerializers will use `PostSerializer::CommentSerializer` (thus including only the `:body_short` attribute) when serializing a `Comment` as part of a `Post`, but use `::CommentSerializer` when serializing a `Comment` directly (thus including `:body, :date, :nb_likes`).
+
+### Extending a Base `ApplicationSerializer`
+
+By default, new serializers descend from `ActiveModel::Serializer`. However, if
+you wish to share behavior across your serializers, you can create an
+`ApplicationSerializer` at `app/serializers/application_serializer.rb`:
+
+```ruby
+class ApplicationSerializer < ActiveModel::Serializer
+end
+```
+
+Then any newly-generated serializers will automatically descend from
+`ApplicationSerializer`.
+
+```
+$ rails g serializer post
+```
+
+Now generates:
+
+```ruby
+class PostSerializer < ApplicationSerializer
+  attributes :id
+end
+````
 
 ## Rails Integration
 
-AMS will automatically integrate with you Rails app, you won't need to update your controller, this is a example of how it will look like:
+ActiveModelSerializers will automatically integrate with your Rails app,
+so you won't need to update your controller.
+This is a example of how the controller will look:
 
 ```ruby
 class PostsController < ApplicationController
@@ -101,4 +121,13 @@ class PostsController < ApplicationController
   end
 
 end
+```
+
+If you wish to use Rails url helpers for link generation, e.g., `link(:resources) { resources_url }`, ensure your application sets
+`Rails.application.routes.default_url_options`.
+
+```ruby
+Rails.application.routes.default_url_options = {
+    host: 'example.com'
+}
 ```

@@ -3,7 +3,7 @@ require 'test_helper'
 module ActionController
   module Serialization
     class JsonApi
-      class LinkedTest < ActionController::TestCase
+      class LinkedTest < ActionDispatch::IntegrationTest
         class LinkedTestController < ActionController::Base
           def setup_post
             ActionController::Base.cache_store.clear
@@ -38,39 +38,39 @@ module ActionController
 
           def render_resource_without_include
             setup_post
-            render json: @post, adapter: :json_api
+            render json: @post
           end
 
           def render_resource_with_include
             setup_post
-            render json: @post, include: [:author], adapter: :json_api
+            render json: @post, adapter: :json_api, include: [:author]
           end
 
           def render_resource_with_include_of_custom_key_by_original
             setup_post
-            render json: @post, include: [:reviews], adapter: :json_api, serializer: PostWithCustomKeysSerializer
+            render json: @post, adapter: :json_api, include: [:reviews], serializer: PostWithCustomKeysSerializer
           end
 
           def render_resource_with_nested_include
             setup_post
-            render json: @post, include: [comments: [:author]], adapter: :json_api
+            render json: @post, adapter: :json_api, include: [comments: [:author]]
           end
 
           def render_resource_with_nested_has_many_include_wildcard
             setup_post
-            render json: @post, include: 'author.*', adapter: :json_api
+            render json: @post, adapter: :json_api, include: 'author.*'
           end
 
           def render_resource_with_missing_nested_has_many_include
             setup_post
             @post.author = @author2 # author2 has no roles.
-            render json: @post, include: [author: [:roles]], adapter: :json_api
+            render json: @post, adapter: :json_api, include: [author: [:roles]]
           end
 
           def render_collection_with_missing_nested_has_many_include
             setup_post
             @post.author = @author2
-            render json: [@post, @post2], include: [author: [:roles]], adapter: :json_api
+            render json: [@post, @post2], adapter: :json_api, include: [author: [:roles]]
           end
 
           def render_collection_without_include
@@ -80,20 +80,26 @@ module ActionController
 
           def render_collection_with_include
             setup_post
-            render json: [@post], include: 'author, comments', adapter: :json_api
+            render json: [@post], adapter: :json_api, include: 'author, comments'
           end
         end
 
-        tests LinkedTestController
+        setup do
+          @routes = Rails.application.routes.draw do
+            ActiveSupport::Deprecation.silence do
+              match ':action', to: LinkedTestController, via: [:get, :post]
+            end
+          end
+        end
 
         def test_render_resource_without_include
-          get :render_resource_without_include
+          get '/render_resource_without_include'
           response = JSON.parse(@response.body)
           refute response.key? 'included'
         end
 
         def test_render_resource_with_include
-          get :render_resource_with_include
+          get '/render_resource_with_include'
           response = JSON.parse(@response.body)
           assert response.key? 'included'
           assert_equal 1, response['included'].size
@@ -101,7 +107,7 @@ module ActionController
         end
 
         def test_render_resource_with_nested_has_many_include
-          get :render_resource_with_nested_has_many_include_wildcard
+          get '/render_resource_with_nested_has_many_include_wildcard'
           response = JSON.parse(@response.body)
           expected_linked = [
             {
@@ -143,7 +149,7 @@ module ActionController
         end
 
         def test_render_resource_with_include_of_custom_key_by_original
-          get :render_resource_with_include_of_custom_key_by_original
+          get '/render_resource_with_include_of_custom_key_by_original'
           response = JSON.parse(@response.body)
           assert response.key? 'included'
 
@@ -155,39 +161,39 @@ module ActionController
         end
 
         def test_render_resource_with_nested_include
-          get :render_resource_with_nested_include
+          get '/render_resource_with_nested_include'
           response = JSON.parse(@response.body)
           assert response.key? 'included'
           assert_equal 3, response['included'].size
         end
 
         def test_render_collection_without_include
-          get :render_collection_without_include
+          get '/render_collection_without_include'
           response = JSON.parse(@response.body)
           refute response.key? 'included'
         end
 
         def test_render_collection_with_include
-          get :render_collection_with_include
+          get '/render_collection_with_include'
           response = JSON.parse(@response.body)
           assert response.key? 'included'
         end
 
         def test_render_resource_with_nested_attributes_even_when_missing_associations
-          get :render_resource_with_missing_nested_has_many_include
+          get '/render_resource_with_missing_nested_has_many_include'
           response = JSON.parse(@response.body)
           assert response.key? 'included'
-          refute has_type?(response['included'], 'roles')
+          refute include_type?(response['included'], 'roles')
         end
 
         def test_render_collection_with_missing_nested_has_many_include
-          get :render_collection_with_missing_nested_has_many_include
+          get '/render_collection_with_missing_nested_has_many_include'
           response = JSON.parse(@response.body)
           assert response.key? 'included'
-          assert has_type?(response['included'], 'roles')
+          assert include_type?(response['included'], 'roles')
         end
 
-        def has_type?(collection, value)
+        def include_type?(collection, value)
           collection.detect { |i| i['type'] == value }
         end
       end
