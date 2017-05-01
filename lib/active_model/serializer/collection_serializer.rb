@@ -1,6 +1,7 @@
 module ActiveModel
   class Serializer
     class CollectionSerializer
+      RootNotFoundError = Class.new(StandardError)
       include Enumerable
       delegate :each, to: :@serializers
 
@@ -46,7 +47,9 @@ module ActiveModel
         # 3. get from collection name, if a named collection
         key ||= object.respond_to?(:name) ? object.name && object.name.underscore : nil
         # 4. key may be nil for empty collection and no serializer option
-        key && key.pluralize
+        key or fail RootNotFoundError, # rubocop:disable Style/AndOr
+          "No serializer given, object is an empty, unnamed collection... cannot determine json_key for collection: object='#{object.inspect}' options='#{options.inspect}' serializers='#{serializers.inspect}'"
+        key.pluralize
       end
       # rubocop:enable Metrics/CyclomaticComplexity
 
